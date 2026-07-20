@@ -27,9 +27,13 @@ Everything is stored locally on the device (localStorage + IndexedDB) — no
 server, works fully offline once installed. Use **Setup → Export backup**
 regularly to keep a copy.
 
-The seeded BQ mirrors TENN's usual sales-gallery ID-works structure with
-rates left at 0 — fill them in from the received BQ, or import the whole BQ
-as CSV (**Setup → Download template** gives the current BQ as a starting file).
+The seeded BQ contains the actual line items from the received tender BQ
+(`BQ- Show Unit Type A & B (ID Works).xlsx`): Preliminaries, Main Lobby,
+Model House Base, Garden Seating Area, Show Unit Type A and Show Unit
+Type B — 68 items. The tender copy is unpriced, so rates are 0 — enter
+them per item, or export the CSV template (**Setup → Download template**),
+price it, and re-import. Claims deduct the contract's 5% retention
+(adjustable in Setup).
 
 ## Running it
 

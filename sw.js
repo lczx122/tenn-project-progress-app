@@ -1,6 +1,6 @@
 /* Offline-first service worker for the TENN Bukit Baru progress app.
    Bump CACHE_VERSION whenever app files change. */
-const CACHE_VERSION = 'tenn-bb-v1';
+const CACHE_VERSION = 'tenn-bb-v2';
 const APP_SHELL = [
   './',
   './index.html',

@@ -9,58 +9,111 @@ const RM = new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' }
 const RM0 = new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR', maximumFractionDigits: 0 });
 
 /* ============================== Seed data ============================== */
-/* Section/item structure follows TENN's sales-gallery ID-works claim format
-   (as per the Klebang claims). Quantities/rates are placeholders — fill in
-   from the actual Lot 26662 BQ via Setup → Edit, or import the BQ as CSV. */
+/* Line items extracted from the received tender BQ:
+   "BQ- Show Unit Type A & B (ID Works).xlsx" — CADANGAN MEMBINA SEBUAH
+   BANGUNAN PERNIAGAAN (PEJABAT), LOT 26662, MUKIM BUKIT BARU, MELAKA TENGAH
+   (Bukit Baru Sales Gallery) · Interior Design and Built-in Furnitures Works.
+   The tender copy is unpriced — enter rates per item or import a priced CSV. */
+const SEED_VERSION = 2;
+const SEED_BQ = [
+  { code: "P", title: "PRELIMINARIES", items: [
+    { code: "1", desc: "Insurance (Car, WC)", unit: "L/sum", qty: 1, rate: 0 },
+    { code: "2", desc: "All cost for preliminaries for overall works (Main Lobby, Show Unit Type A & Type B)", unit: "L/sum", qty: 1, rate: 0 },
+  ] },
+  { code: "L", title: "MAIN LOBBY", items: [
+    { code: "1", desc: "[A. Reception Counter Table] Reception Table Counter comes with drawer and lock key set, complete with Top colour tempered glass , Marble finishes with code (TP7-53011G VOLAKAS), white glossy laminate (counter centre part), black glossy laminate for bottom part of counter, light trough/cove, opening for switches, top desk, table desk, keylock, etc all to refer 3D and ID's Details Drawing.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "2", desc: "[A. Reception Counter Table] To include supply & install LED light strip, driver, casing and light cover (flosted)", unit: "Lot", qty: 1, rate: 0 },
+    { code: "3", desc: "[B. Front Backdrop behind Reception] Wall panel with TP6-3361-M Midnight Marble Finishes (Topmix) c/w 20mm gold strip and 20mm Black Fluted Panel, Wall panel with TP7-53011G VOLAKAS-Marble Finishes c/w 20mm gold strip for centre part, backdrop LED light and including both sides panels with bronze mirror with LED lighting etc all as per 3D & ID's Details Drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "4", desc: "[B. Front Backdrop behind Reception] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "5", desc: "[C. Left Side Wall (Company Milestones' Wall)] Wall panel with TP7-53011G Volakas- Marble Finishes c/w 20mm gold strip, 20mm Black Fluted Panel, all with 20mm gold strip, LED light with casing etc all as per 3D & ID's Details Drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "6a", desc: "[D. ID Wall Finishes @ Front Show Unit Area] a) for front area at Show Unit Type A", unit: "Lot", qty: 1, rate: 0 },
+    { code: "6b", desc: "[D. ID Wall Finishes @ Front Show Unit Area] b) for Front area at Show Unit Type B", unit: "Lot", qty: 1, rate: 0 },
+    { code: "7", desc: "[E. Sitting & Discussion Area, Pantry & Utility] Wall panel with TP7-53011G Volkas- Marble Finishes c/w 20mm Gold strip,Bronze Mirror Wall Panel with LED Backlight etc. all as per ID Drawings. *Note: Required add additional backing support for Advertising panel area & TV Area; Advertising Panel area is recess back; supply & install advertising panel by other.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "8", desc: "[F. Counter Table 02] Counter Table complete with Top colour tempered glass , Marble finishes with code (TP7-53011G VOLAKAS), 20mm Black Fluted Panel, TP6-3361-M Midnight Marble Finishes for above & bottom part of counter, light trough/cove, opening for switches, top desk, table desk, keylock, etc all to refer 3D and ID's Details Drawing.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "9", desc: "[F. Counter Table 02] To include supply & install LED light strip, driver, casing and light cover (flosted)", unit: "Lot", qty: 1, rate: 0 },
+    { code: "10", desc: "[G. Advertising Wall near Show Unit] Bronze Mirror Wall Panel with LED Backlight etc. all as per ID Drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "11", desc: "[H. Pantry Cabinet] Pantry Cabinet in Black galaxy stone counter top (to client selection) and side c/w gray colour glass on doors, drawer & shelves etc all as per ID Drawings **To add aluminium shelves on top of Pantry Cabinet (refer 3D Drawings) (Single Bowl Sink & Water Tap by other)", unit: "Lot", qty: 1, rate: 0 },
+    { code: "12a", desc: "[Public Toilet Mirror] a) Male Toilet: Size ± 1950mm x 900mm height", unit: "Lot", qty: 1, rate: 0 },
+    { code: "12b", desc: "[Public Toilet Mirror] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "12c", desc: "[Public Toilet Mirror] b) Female Toilet: Size ± 2750mm x 900mm height", unit: "Lot", qty: 1, rate: 0 },
+    { code: "12d", desc: "[Public Toilet Mirror] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+  ] },
+  { code: "M", title: "LOBBY \u2014 MODEL HOUSE BASE", items: [
+    { code: "1", desc: "[A. Model House Bench] To construct a model house base structure to carpenter details, c/w 20mm(H) RIM Boarder with laminate finish (Code: TP7 53011G VOLAKAS -MARBLE FINISHES) with black paint on top of base, black glossy laminate. LED light all details to follow ID's drawing.", unit: "Lot", qty: 1, rate: 0 },
+  ] },
+  { code: "G", title: "LOBBY \u2014 GARDEN SEATING AREA", items: [
+    { code: "1", desc: "[A. Sitting Area 01] To construct a seating bench with timber finish details all to follow details drawing", unit: "Lot", qty: 1, rate: 0 },
+    { code: "2", desc: "[A. Sitting Area 01] To construct planter box with textured finish details all to follow details drawing", unit: "Lot", qty: 1, rate: 0 },
+    { code: "3", desc: "[B. Sitting Area 02] To construct a seating bench with timber finish details all to follow details drawing.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "4", desc: "[B. Sitting Area 02] To construct planter box with textured finish details all to follow details drawing.", unit: "Lot", qty: 1, rate: 0 },
+  ] },
+  { code: "A", title: "SHOW UNIT TYPE A (2 BEDROOMS)", items: [
+    { code: "1", desc: "[A. Living Hall TV Area — Back Panel] Marble effects laminate (Code: TP6-3321-G (Topmix) c/w Gold laminate with LED Light c/w Built- In TV cabinet with glossy beige laminate (Code: TS7-6026-G-Creamy) all design as per client's selection, light cove, etc all as per ID's Drawings. (To add additional structure support for TV installation)", unit: "Lot", qty: 1, rate: 0 },
+    { code: "2", desc: "[A. Living Hall TV Area — Back Panel] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "3", desc: "[B. Dining Area — Marble Effect & Wainscoting Wall] 25mm wainscotting wall panel (pattern to client's selection), 20mm wall fluted panel c/w 10mm gold strip and tea mirror, all design as per client's selection, light cove, etc all as per ID's Drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "4", desc: "[B. Dining Area] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "5", desc: "[C. Living Hall — Behind Sofa Area] 20mm Wood Grain Beige Fluted Wall panels c/w Glossy beige laminate with 10cm glod strip (Code: TS7-6026-G-CREAMY) (all profile and pattern to client selection), painting, etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "6", desc: "[D. Dining Hall & Kitchen/Yard] 20mm beige fluted wall panel c/w marble effect laminate (pattern to client's selection), tea mirror, Glossy beige laminate with 10mm gold strip (Code: TS7-6026-G-CREAMY) with LED backlight, light cove, painting, etc all as per ID's Drawings", unit: "Lot", qty: 1, rate: 0 },
+    { code: "7", desc: "[D. Dining Hall & Kitchen/Yard] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "8", desc: "[E. Master Bedroom] Bedhead with fabric finish, Fabric wall panel c/w 75mm gold laminate, Marble effect laminate with LED strip (Code: TP7-53018M-VOLAKAS) etc. all as per ID drawings", unit: "Lot", qty: 1, rate: 0 },
+    { code: "9", desc: "[E. Master Bedroom] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "10", desc: "[E. Master Bedroom] Bedside table", unit: "no", qty: 1, rate: 0 },
+    { code: "11", desc: "[F. Master Bedroom (Built-in Cabinet)] Built in cabinet c/w Glossy Beige laminate (Code: TS7-6026-G-CREAMY), Wood grain laminate (Code: TW10-53706 IM BOLZANO WALNUT), 5mm Groove Line etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "12", desc: "[F. Master Bedroom (Built-in Cabinet)] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "13", desc: "[G. Bedroom 01] Glossy beige laminate bedhead with 5mm groove line (Code: TS7-6026-G-CREAMY), Glossy Beige Laminate wall panel with LED strip (Code:TS7-6026-G-CREAMY), Fabric wall panel, Tea mirror with 5mm groove line etc. all as per ID drawings", unit: "Lot", qty: 1, rate: 0 },
+    { code: "14", desc: "[G. Bedroom 01] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "15", desc: "[G. Bedroom 01] Bedside table c/w wood grain laminate (Code: Top Mix TW10-53006 VM ASAPH ASH), Glossy Beige Laminate (Code; TS7-6026 G CREAMY) all as per ID's Drawings.", unit: "no", qty: 1, rate: 0 },
+    { code: "16", desc: "[H. Bedroom 01 (Built-in Cabinet)] Built in cabinet c/w wood grain laminate shelves with LED Strip (Code: TW10-53006 VM ASAPH ASH), Wood grain laminate (Code: Top Mix TW10-53006 VM ASAPH ASH), Glossy Beige laminate (Code: TS7-6026 G CREAMY) etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "17", desc: "[H. Bedroom 01 (Built-in Cabinet)] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "18", desc: "[I. Bathroom 1 & 2] Supply & install toilet vanity cabinet in Gray laminate (Code: TS4-1227 Dim Grey (Top Mix) finish c/w 100mm thick Quartz Stone counter top (including opening for Table Top basin) to details ID's drawings. (Material type, colour & finishes to the Client selection) overall size : ± 500mm (L) x 450mm (W) x 400mm (H) *Quartz stone 100mm height", unit: "Lot", qty: 2, rate: 0 },
+    { code: "19", desc: "[I. Bathroom 1 & 2] Supply & install toilet Full height Glass Mirror (in bronze colour or subject to Client final decision). Complete with LED light cove. Size ± 900mm Height x 1520mm (Length)", unit: "Lot", qty: 2, rate: 0 },
+    { code: "20", desc: "[I. Bathroom 1 & 2] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 2, rate: 0 },
+    { code: "21", desc: "[J. Door Frame] 70mm Wood Grain Laminate Door Frame (Code: TW8-3786VF ERFURT ACACIA) all as client selection etc. (for Main foyer, Master bed, bedroom 2, bath 1 & 2, kitchen/yard door)", unit: "no", qty: 6, rate: 0 },
+  ] },
+  { code: "B", title: "SHOW UNIT TYPE B (3 BEDROOMS)", items: [
+    { code: "1", desc: "[A. Living Hall — Sofa Area] 20mm Wood Grain Fluted panel c/w Matte light grey laminate with 5mm groove line (Code: TS4-1223 GAINSBORO GREY) ) all design as per client's selection, light cove, etc all as per ID's Drawings. (To add additional structure support for TV installation)", unit: "Lot", qty: 1, rate: 0 },
+    { code: "2", desc: "[A. Living Hall — Sofa Area] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "3", desc: "[B. Living Hall TV Area — Back Panel] Marble effects laminate (Code: TP6-3331-G Levanto Marble) c/w 5mm groove line, Wood effect laminate with 5mm groove line (Code: TW8-3758 SE SOKOTO CHESTNUT), 10mm Gold Strip c/w Built- In TV cabinet with glossy black laminate (Code: TS6-5018 G BLACK), marble effect laminate (Code: TP6-3331 G LEVANTO MARBLE), Tea mirror, all design as per client's selection, light cove, etc all as per ID's Drawings. (To add additional structure support for TV installation)", unit: "Lot", qty: 1, rate: 0 },
+    { code: "4", desc: "[B. Living Hall TV Area — Back Panel] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "5", desc: "[C. Dining Area] Matte light grey laminate with 5mm groove line (Code: TS4-1223 GAINSBORO GREY), 5mm groove line at 750mm height, Marble Effect laminate (Code: TP6-3331 G LEVANTO MARBLE) , Wood effect laminate with 5mm groove line (Code: TW8-3758 SE SOKOTO CHESTNUT), Tea Mirror with LED light , all design as per client's selection, light cove, etc all as per ID's Drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "6", desc: "[C. Dining Area] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "7", desc: "[D. Master Bedroom] 1000mm Fabric Bedhead with LED Backlight c/w 25mm wood fluted panel on top of bed head. Marble effect laminate with 5mm Groove line (Code:TP7-53015 G IMOLA MARBLE) c/w 10mm Gold strip for Back Panel, Wall Panel with 20mm wainscottting to client selection etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "8", desc: "[D. Master Bedroom] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "9", desc: "[D. Master Bedroom] Bedside table c/w Wood grain effect laminate (Code: TW8-3758 SE SOKOTO CHESTNUT), Glossy Gray Laminate (Code: TS6-5223 G GAINSBORO GREY) etc all as per ID's Drawing.", unit: "no", qty: 2, rate: 0 },
+    { code: "10", desc: "[E. Master Bedroom (Built-in Cabinet)] Built in cabinet c/w Wood grain effect laminate with 5mm groove line (Code: TW8-3758 SE SOKOTO CHESTNUT), Gray laminate with 5mm groove line (Code: TS6-5223 G GAINSBORO GREY), 5mm Groove Line etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "11", desc: "[E. Master Bedroom (Built-in Cabinet)] Dressing table with Wood grain effect laminate backing (Code: TW8-3758 SE SOKOTO CHESTNUT) c/w mirror with LED Backlight, Wood grain effect laminate for top (Code: TW8-3758 SE SOKOTO CHESTNUT) c/w laminated drawer with (Code: TS6-5223 G GAINSBORO GREY) etc all as per ID's Drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "12", desc: "[E. Master Bedroom (Built-in Cabinet)] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "13", desc: "[F. Bedroom 01] Wood grain laminated bedhead (Code: M30207 Messiera Cherry (Maica) )with 25mm wood fluted panel, (Bed base by carpenter's details) with LED strip all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "14", desc: "[F. Bedroom 01] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "15", desc: "[G. Bedroom 01 (Built-in Cabinet)] Built in cabinet c/w Glossy Grey laminate (Code: TS6-5223 G GAINSBORO GREY) c/w wood grain laminate (Code: M30207 Messiera Cherrry (Maica) )wood grain laminate backing, handle & desk top (Code: M30207 Messiera Cherry (Maica) ) with LED Strip etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "16", desc: "[G. Bedroom 01 (Built-in Cabinet)] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "17", desc: "[H. Bedroom 02] Fabric wall panel c/w marble effect laminate with LED light (Code: TP7-53011 G VOLAKAS MARBLE) etc. all as per ID drawings", unit: "Lot", qty: 1, rate: 0 },
+    { code: "18", desc: "[H. Bedroom 02] Supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "19", desc: "[I. Bedroom 02 (Built-in Cabinet)] Built in cabinet c/w Glossy Beige laminate (Code: TS7-6026 G CREAMY) and Tea Mirror, Wood grain laminate (Code: M3042 English Oak (Maica) ) for shelves with LED Strip etc. all as per ID drawings.", unit: "Lot", qty: 1, rate: 0 },
+    { code: "20", desc: "[I. Bedroom 02 (Built-in Cabinet)] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 1, rate: 0 },
+    { code: "21", desc: "[J. Bathroom 1 & 2] Supply & install toilet vanity cabinet in Gray laminate (Code: TS4-1227 Dim Grey (Top Mix) finish c/w 100mm thick Quartz Stone counter top (including opening for Table Top basin) to details ID's drawings. (Material type, colour & finishes to the Client selection) overall size : ± 500mm (L) x 450mm (W) x 400mm (H) *Quartz stone 100mm height", unit: "Lot", qty: 2, rate: 0 },
+    { code: "22", desc: "[J. Bathroom 1 & 2] Supply & install toilet Full height Glass Mirror (in bronze colour or subject to Client final decision). Complete with LED light cove. Size ± 900mm Height x 1140mm (Length)", unit: "Lot", qty: 2, rate: 0 },
+    { code: "23", desc: "[J. Bathroom 1 & 2] -supply and install LED light strip c/w driver and accessories", unit: "Lot", qty: 2, rate: 0 },
+    { code: "24", desc: "[K. Door Frame] 70mm Wood Grain Laminate Door Frame (Code: TW8-3786VF ERFURT ACACIA) all as client selection etc. (for Main foyer, Master bed, bedroom 1 & 2, bath 1 & 2, kitchen/yard door)", unit: "no", qty: 6, rate: 0 },
+  ] },
+];
+
 function seedState() {
-  const S = (code, title, items) => ({
-    id: uid(), code, title,
-    items: items.map(([c, desc, unit, qty, rate]) => ({ id: uid(), code: c, desc, unit, qty, rate, pct: 0 }))
-  });
   return {
+    seedVersion: SEED_VERSION,
     project: {
       name: 'Ambience Bukit Baru Showroom',
-      lot: 'Lot 26662, Bukit Baru Sales Gallery — ID Works',
+      lot: 'Lot 26662, Mukim Bukit Baru — Sales Gallery ID Works',
       contractor: 'TENN FASTENERS (MELAKA) SDN BHD',
-      client: '',
+      client: 'FAITHVIEW HOLDING SDN BHD',
       startDate: today(),
       targetDate: '',
+      retentionPct: 5,
     },
-    sections: [
-      S('A', 'SHOW UNIT TYPE A (2 BEDROOMS)', [
-        ['1.a', 'Living hall TV area — feature wall panels c/w built-in TV console cabinet, light cove, etc. as per ID drawings', 'Lot', 1, 0],
-        ['1.b', 'Supply and install LED light strip c/w driver and accessories', 'Lot', 1, 0],
-        ['2.a', 'Dining area — wall panels / wainscoting c/w paint finish as per ID drawings', 'Lot', 1, 0],
-        ['3.a', 'Living hall behind-sofa area — fluted / wainscoting wall panels, painting, etc.', 'Lot', 1, 0],
-        ['4.a', 'Master bedroom — bedhead feature wall, wall panels, mirror, light cove as per ID drawings', 'Lot', 1, 0],
-        ['4.b', 'Master bedroom — built-in wardrobe / cabinet c/w light cove', 'Lot', 1, 0],
-        ['5.a', 'Bedroom 2 — bedhead feature wall, wall panels, light cove as per ID drawings', 'Lot', 1, 0],
-        ['5.b', 'Bedroom 2 — built-in cabinet c/w groove line, door groove handle, light cove', 'Lot', 1, 0],
-        ['6.a', 'Bathrooms — wall-hung basin cabinet c/w quartz stone counter top', 'Lot', 2, 0],
-        ['6.b', 'Bathrooms — glass mirror c/w LED light cove', 'Lot', 2, 0],
-        ['7.a', 'Wooden door frames c/w wood grain effect melamine', 'no', 5, 0],
-      ]),
-      S('B', 'SHOW UNIT TYPE B (3 BEDROOMS)', [
-        ['1.a', 'Living hall TV area — feature wall panels c/w built-in TV console cabinet, light cove, etc. as per ID drawings', 'Lot', 1, 0],
-        ['1.b', 'Supply and install LED light strip c/w driver and accessories', 'Lot', 1, 0],
-        ['2.a', 'Dining hall — wainscoting / fluted wall panels as per ID drawings', 'Lot', 1, 0],
-        ['3.a', 'Master bedroom — bedhead feature wall, wall panels, mirror, light cove as per ID drawings', 'Lot', 1, 0],
-        ['3.b', 'Master bedroom — built-in wardrobe / cabinet c/w light cove', 'Lot', 1, 0],
-        ['4.a', 'Bedroom 2 — feature wall, wall panels, light cove as per ID drawings', 'Lot', 1, 0],
-        ['4.b', 'Bedroom 2 — built-in cabinet / study desk as per ID drawings', 'Lot', 1, 0],
-        ['5.a', 'Bedroom 3 — feature wall, wall panels, light cove as per ID drawings', 'Lot', 1, 0],
-        ['5.b', 'Bedroom 3 — built-in cabinet / bed frame as per ID drawings', 'Lot', 1, 0],
-        ['6.a', 'Bathrooms — wall-hung basin cabinet c/w quartz stone counter top', 'Lot', 2, 0],
-        ['6.b', 'Bathrooms — glass mirror c/w LED light cove', 'Lot', 2, 0],
-        ['7.a', 'Wooden door frames c/w wood grain effect melamine', 'no', 6, 0],
-      ]),
-      S('C', 'SALES GALLERY COMMON AREA', [
-        ['1.a', 'Reception / welcome counter — feature cladding and counter works as per ID drawings', 'Lot', 1, 0],
-        ['2.a', 'Feature wall & display panels at gallery hall', 'Lot', 1, 0],
-        ['3.a', 'Discussion area — wall panels / built-in cabinetry', 'Lot', 1, 0],
-        ['4.a', 'LED light strips c/w drivers and accessories (common area)', 'Lot', 1, 0],
-      ]),
-    ],
+    sections: SEED_BQ.map(s => ({
+      id: uid(), code: s.code, title: s.title,
+      items: s.items.map(it => ({ id: uid(), pct: 0, ...it })),
+    })),
     claims: [],
     diary: [],
   };
@@ -74,10 +127,27 @@ let openSections = new Set(state.sections.map(s => s.id)); // all open initially
 function load() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return migrate(JSON.parse(raw));
   } catch (e) { console.error('load failed', e); }
   const s = seedState();
   localStorage.setItem(STORE_KEY, JSON.stringify(s));
+  return s;
+}
+/* Re-seed an install that still holds an older placeholder BQ untouched;
+   never touch a state that has any real progress, rates, claims or diary. */
+function migrate(s) {
+  const untouched = !s.claims?.length && !s.diary?.length &&
+    s.sections.every(sec => sec.items.every(it => !it.pct && !it.rate));
+  if ((s.seedVersion || 1) < SEED_VERSION && untouched) {
+    const ns = seedState();
+    localStorage.setItem(STORE_KEY, JSON.stringify(ns));
+    return ns;
+  }
+  if (s.project.retentionPct == null || s.seedVersion !== SEED_VERSION) {
+    if (s.project.retentionPct == null) s.project.retentionPct = 5;
+    s.seedVersion = SEED_VERSION;
+    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+  }
   return s;
 }
 function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
@@ -203,8 +273,8 @@ function renderDashboard() {
 
     ${total === 0 ? `<div class="card"><h2>Getting Started</h2>
       <p style="font-size:13px;line-height:1.5;color:var(--ink-soft)">
-        The BQ is pre-loaded with TENN's standard sales-gallery ID-works structure, but rates are not filled in yet.
-        Tap items in the <b>BQ</b> tab to enter qty &amp; rates from the Lot 26662 BQ, or import the whole BQ as CSV in <b>Setup</b>.
+        The BQ is loaded with the actual Lot 26662 tender line items (all 6 sections), but the tender copy is unpriced.
+        Tap items in the <b>BQ</b> tab to enter your rates, or export the CSV template in <b>Setup</b>, price it, and re-import.
       </p></div>` : ''}
   `;
 }
@@ -427,6 +497,7 @@ function openClaimDoc(claimId) {
   const c = state.claims.find(x => x.id === claimId);
   if (!c) return;
   const p = state.project;
+  const retPct = Number(p.retentionPct) || 0;
 
   let grandContract = 0, grandClaim = 0;
   const sectionBlocks = state.sections.map(sec => {
@@ -465,6 +536,11 @@ function openClaimDoc(claimId) {
             ${sectionBlocks}
             <tr class="total"><td colspan="5">TOTAL THIS CLAIM</td><td class="num">${fmtRM(grandContract)}</td>
               <td colspan="3"></td><td class="num">${fmtRM(grandClaim)}</td></tr>
+            ${retPct > 0 ? `
+            <tr><td colspan="9">Less retention ${retPct}% (release upon end of DLP)</td>
+              <td class="num">(${fmtRM(grandClaim * retPct / 100)})</td></tr>
+            <tr class="total"><td colspan="9">NET AMOUNT THIS CLAIM</td>
+              <td class="num">${fmtRM(grandClaim * (1 - retPct / 100))}</td></tr>` : ''}
           </tbody>
         </table>
       </div>
@@ -506,6 +582,11 @@ function exportClaimCSV(c) {
     }
   }
   rows.push([], ['', '', '', '', '', '', '', '', 'TOTAL THIS CLAIM', grand.toFixed(2)]);
+  const retPct = Number(p.retentionPct) || 0;
+  if (retPct > 0) {
+    rows.push(['', '', '', '', '', '', '', '', `LESS RETENTION ${retPct}%`, (-grand * retPct / 100).toFixed(2)]);
+    rows.push(['', '', '', '', '', '', '', '', 'NET AMOUNT THIS CLAIM', (grand * (1 - retPct / 100)).toFixed(2)]);
+  }
   downloadFile(`Claim_${c.no}_${p.name.replace(/\s+/g, '_')}.csv`, toCSV(rows), 'text/csv');
 }
 
@@ -641,6 +722,8 @@ function renderSettings() {
         <div class="field"><label>Start date</label><input type="date" id="pStart" value="${esc(p.startDate)}"></div>
         <div class="field"><label>Target completion</label><input type="date" id="pTarget" value="${esc(p.targetDate)}"></div>
       </div>
+      <div class="field"><label>Retention % (per contract — deducted on each claim)</label>
+        <input type="number" inputmode="decimal" id="pRetention" value="${p.retentionPct ?? 5}" min="0" max="20" step="0.5"></div>
       <button class="btn accent block" id="saveProject">Save Details</button>
     </div>
 
@@ -676,6 +759,7 @@ function renderSettings() {
     Object.assign(state.project, {
       name: val('pName'), lot: val('pLot'), contractor: val('pContractor'),
       client: val('pClient'), startDate: val('pStart'), targetDate: val('pTarget'),
+      retentionPct: Number(val('pRetention')) || 0,
     });
     save(); render(); toast('Project details saved');
   });
