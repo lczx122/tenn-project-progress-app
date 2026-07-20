@@ -389,3 +389,38 @@ table.claim-table { border-collapse: collapse; width: 100%; min-width: 640px; fo
 
 .backbar { display: flex; align-items: center; gap: 10px; }
 .backbar b { font-size: 15px; }
+
+/* ================= Phase 1 UX ================= */
+/* Sticky action bar in scrolling modals */
+.modal:has(.modal-actions) { padding-bottom: 0; }
+.modal-actions {
+  position: sticky; bottom: 0; z-index: 2;
+  display: flex; gap: 8px;
+  background: var(--surface);
+  margin: 16px -18px 0;
+  padding: 12px 18px calc(14px + var(--safe-bottom));
+  border-top: 1px solid var(--line);
+}
+
+/* Bigger touch targets for site use */
+.stage-check { width: 34px; height: 34px; }
+.stage-na { padding: 9px 12px; font-size: 11px; }
+.status-chip { padding: 8px 12px; font-size: 11px; min-height: 30px; display: inline-flex; align-items: center; }
+.leg { padding: 6px 10px; }
+
+/* Toast with action button (Undo) */
+.toast { display: inline-flex; align-items: center; gap: 14px; }
+.toast button {
+  font: inherit; font-size: 12px; font-weight: 800; letter-spacing: .03em;
+  color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px 2px;
+}
+
+/* Next-stage label on area cards */
+.next-label { font-size: 11.5px; font-weight: 700; color: var(--navy); }
+.next-label.done { color: var(--good); }
+.area-foot2 { margin-top: 7px; }
+
+/* Tappable attention rows */
+.attn-row { cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 0 !important; }
+.attn-row i { margin-left: auto; font-style: normal; color: var(--ink-faint); font-size: 16px; }
+.attn-row:active { opacity: .7; }

@@ -214,11 +214,35 @@ function renderHome() {
   const funnel = BUY_STATUSES.filter(s => s.k !== 'na').map(s =>
     counts[s.k] ? `<i style="flex:${counts[s.k]};background:${s.color}" title="${s.label}: ${counts[s.k]}"></i>` : '').join('');
 
+  /* actionable attention rows — each navigates to the pre-filtered view */
   const attention = [];
-  if (counts.sample) attention.push(`${counts.sample} item(s) awaiting sample approval`);
-  if (counts.pending) attention.push(`${counts.pending} item(s) still to order`);
-  const stuck = state.areas.filter(a => a.stages.deliver === 'done' && a.stages.install === 'todo').length;
-  if (stuck) attention.push(`${stuck} area(s) with materials delivered but installation not started`);
+  if (counts.sample) attention.push({
+    text: `${counts.sample} item(s) awaiting sample approval`,
+    go: () => { buyFilter = { status: 'sample', cat: 'ALL', q: '' }; activeTab = 'buy'; },
+  });
+  if (counts.pending) attention.push({
+    text: `${counts.pending} item(s) still to order`,
+    go: () => { buyFilter = { status: 'pending', cat: 'ALL', q: '' }; activeTab = 'buy'; },
+  });
+  const stuck = state.areas.filter(isStalled).length;
+  if (stuck) attention.push({
+    text: `${stuck} area(s) with materials delivered but installation not started`,
+    go: () => { areaFilter = 'STUCK'; activeTab = 'areas'; },
+  });
+  const unpriced = state.sections.flatMap(s => s.items).filter(i => !i.rate).length;
+  if (unpriced) attention.push({
+    text: `${unpriced} BQ item(s) have no rate yet — claims need rates`,
+    go: () => { activeTab = 'more'; moreView = 'bq'; },
+  });
+  const backupDays = daysSinceBackup();
+  if (hasMeaningfulData() && backupDays > 7) attention.push({
+    text: backupDays === Infinity
+      ? 'No backup exported yet — data lives only on this device'
+      : `Last backup was ${backupDays} days ago`,
+    go: () => { activeTab = 'more'; },
+  });
+
+  const claimable = newClaimLines().reduce((a, l) => a + l.amountThis, 0);
 
   view.innerHTML = `
     <div class="card hero">
@@ -233,18 +257,25 @@ function renderHome() {
       <div class="big-progress"><i style="width:${pct}%"></i></div>
     </div>
 
+    ${claimable > 0 ? `<div class="card">
+      <h2>Claim Ready</h2>
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px">
+        <b>${fmtRM(claimable)}</b> of completed work is not yet certified in a claim.</p>
+      <button class="btn accent block" id="goClaimCta">Prepare Claim ${state.claims.length + 1}</button>
+    </div>` : ''}
+
     <div class="card">
       <h2>Procurement Pipeline · ${trackable} items</h2>
       <div class="funnel">${funnel || '<i style="flex:1;background:var(--line)"></i>'}</div>
       <div class="funnel-legend">
         ${BUY_STATUSES.filter(s => s.k !== 'na').map(s =>
-          `<span><i style="background:${s.color}"></i>${s.label} <b>${counts[s.k]}</b></span>`).join('')}
+          `<span class="leg" data-gost="${s.k}"><i style="background:${s.color}"></i>${s.label} <b>${counts[s.k]}</b></span>`).join('')}
       </div>
     </div>
 
     ${attention.length ? `<div class="card attention">
       <h2>Needs Attention</h2>
-      ${attention.map(a => `<div class="attn-row">⚠️ ${esc(a)}</div>`).join('')}
+      ${attention.map((a, i) => `<div class="attn-row" data-attn="${i}">⚠️ ${esc(a.text)} <i>›</i></div>`).join('')}
     </div>` : ''}
 
     <div class="card">
@@ -275,24 +306,55 @@ function renderHome() {
     </div>` : ''}
   `;
 
+  view.querySelectorAll('[data-attn]').forEach(el => el.addEventListener('click', () => {
+    attention[Number(el.dataset.attn)].go();
+    render(); window.scrollTo(0, 0);
+  }));
+  view.querySelectorAll('[data-gost]').forEach(el => el.addEventListener('click', () => {
+    buyFilter = { status: el.dataset.gost, cat: 'ALL', q: '' };
+    activeTab = 'buy'; render(); window.scrollTo(0, 0);
+  }));
+  document.getElementById('goClaimCta')?.addEventListener('click', () => {
+    activeTab = 'more'; moreView = 'claims'; render(); window.scrollTo(0, 0);
+  });
   view.querySelectorAll('[data-part]').forEach(el => el.addEventListener('click', () => {
     areaFilter = el.dataset.part; activeTab = 'areas'; render(); window.scrollTo(0, 0);
   }));
 }
 
+function isStalled(a) { return a.stages.deliver === 'done' && a.stages.install === 'todo'; }
+function nextStageLabel(a) {
+  const st = STAGES.find(s => a.stages[s.k] === 'todo');
+  return st ? st.label : 'Complete';
+}
+function daysSinceBackup() {
+  if (!state.lastBackup) return Infinity;
+  return Math.floor((new Date(today() + 'T00:00:00') - new Date(state.lastBackup + 'T00:00:00')) / 86400000);
+}
+function hasMeaningfulData() {
+  return state.claims.length > 0 || state.diary.length > 0 ||
+    state.areas.some(a => a.items.some(i => i.status !== 'pending') || STAGES.some(st => a.stages[st.k] !== 'todo')) ||
+    state.sections.some(s => s.items.some(i => i.pct > 0 || i.rate > 0));
+}
+
 /* ============================== Areas ============================== */
 function renderAreas() {
   const parts = [['ALL', 'All'], ...SEED_AREAS.map(p => [p.part, shortPart(p.part)])];
-  const list = state.areas.filter(a => areaFilter === 'ALL' || a.part === areaFilter);
+  const list = state.areas.filter(a =>
+    areaFilter === 'ALL' ? true :
+    areaFilter === 'STUCK' ? isStalled(a) :
+    a.part === areaFilter);
 
   view.innerHTML = `
     <div class="pills">${parts.map(([k, lbl]) =>
-      `<button class="pill ${areaFilter === k ? 'on' : ''}" data-pf="${k}">${lbl}</button>`).join('')}</div>
+      `<button class="pill ${areaFilter === k ? 'on' : ''}" data-pf="${k}">${lbl}</button>`).join('')}
+      ${areaFilter === 'STUCK' ? '<button class="pill on" data-pf="ALL">Stalled ✕</button>' : ''}</div>
     ${list.map(a => {
       const pct = areaPct(a);
       const counts = buyCounts(a.items);
       const installed = counts.installed;
       const total = a.items.length - counts.na;
+      const next = nextStageLabel(a);
       return `<div class="area-card" data-area="${a.id}">
         <div class="area-head">
           <span class="code">${esc(a.code)}</span>
@@ -301,14 +363,14 @@ function renderAreas() {
         </div>
         <div class="mini-progress"><i class="${pct >= 99.95 ? 'done' : ''}" style="width:${pct}%"></i></div>
         <div class="area-foot">
-          <span class="stage-dots">${STAGES.map(st => {
-            const v = a.stages[st.k];
-            return `<i class="${v}" title="${st.label}"></i>`;
-          }).join('')}</span>
+          <span class="next-label ${next === 'Complete' ? 'done' : ''}">${next === 'Complete' ? '✓ Complete' : 'Next: ' + esc(next)}</span>
           <span class="dim">${total ? `${installed}/${total} materials installed` : 'no materials'}</span>
         </div>
+        <div class="area-foot2">
+          <span class="stage-dots">${STAGES.map(st => `<i class="${a.stages[st.k]}" title="${st.label}"></i>`).join('')}</span>
+        </div>
       </div>`;
-    }).join('') || '<p class="empty-note">No areas in this part.</p>'}
+    }).join('') || '<p class="empty-note">No areas match this filter.</p>'}
   `;
 
   view.querySelectorAll('[data-pf]').forEach(b => b.addEventListener('click', () => { areaFilter = b.dataset.pf; renderAreas(); }));
@@ -402,7 +464,7 @@ function openAreaModal(areaId) {
       chip.addEventListener('click', () => {
         const row = chip.closest('.buy-row');
         const it = a.items.find(i => i.id === row.dataset.buy);
-        advanceStatus(it); save(); paint(root);
+        quickAdvance(it, () => { if (root.isConnected) paint(root); else render(); });
       }));
     root.querySelector('#saveArea').addEventListener('click', () => {
       a.note = root.querySelector('#areaNote').value.trim();
@@ -411,11 +473,19 @@ function openAreaModal(areaId) {
   });
 }
 
-/* quick-advance to the next status (skips na) */
-function advanceStatus(it) {
+/* Chip tap = advance one status step, with an Undo toast. No wrap-around:
+   'installed' stays put, 'na' opens the full sheet instead. */
+function quickAdvance(item, repaint) {
+  if (item.status === 'na') { openBuyStatus(item.id, repaint); return; }
+  if (item.status === 'installed') { toast('Already installed — tap the item to change'); return; }
   const order = ['pending', 'sample', 'ordered', 'delivered', 'installed'];
-  const i = order.indexOf(it.status);
-  it.status = order[(i + 1) % order.length] || 'pending';
+  const prev = item.status;
+  item.status = order[order.indexOf(prev) + 1] || 'installed';
+  save(); repaint();
+  toast(`→ ${statusOf(item.status).label}: ${item.name.slice(0, 40)}`, {
+    label: 'Undo',
+    fn: () => { item.status = prev; save(); repaint(); },
+  });
 }
 
 /* --- buy item status sheet --- */
@@ -450,36 +520,20 @@ function openBuyStatus(buyId, onDone) {
 }
 
 /* ============================== Buy list ============================== */
+/* The toolbar (funnel, search, category) renders once; only the list body
+   re-paints on filter/search changes so the search input keeps focus. */
 function renderBuy() {
   const all = allBuyItems();
   const counts = buyCounts(all.map(x => x.item));
-  const match = ({ area, item }) => {
-    if (buyFilter.status !== 'ALL' && item.status !== buyFilter.status) return false;
-    if (buyFilter.cat !== 'ALL' && item.cat !== buyFilter.cat) return false;
-    if (buyFilter.q) {
-      const q = buyFilter.q.toLowerCase();
-      if (!(item.name + ' ' + item.spec + ' ' + area.title + ' ' + area.code).toLowerCase().includes(q)) return false;
-    }
-    return true;
-  };
-  const filtered = all.filter(match);
-
-  const byArea = [];
-  for (const x of filtered) {
-    let g = byArea[byArea.length - 1];
-    if (!g || g.area.id !== x.area.id) { g = { area: x.area, items: [] }; byArea.push(g); }
-    g.items.push(x.item);
-  }
-
   const funnel = BUY_STATUSES.filter(s => s.k !== 'na').map(s =>
     counts[s.k] ? `<i style="flex:${counts[s.k]};background:${s.color}"></i>` : '').join('');
 
   view.innerHTML = `
     <div class="card" style="padding:12px 16px">
       <div class="funnel">${funnel || '<i style="flex:1;background:var(--line)"></i>'}</div>
-      <div class="funnel-legend">
-        ${BUY_STATUSES.map(s => `<span class="leg ${buyFilter.status === s.k ? 'on' : ''}" data-fst="${s.k}"><i style="background:${s.color}"></i>${s.label} <b>${counts[s.k]}</b></span>`).join('')}
-        <span class="leg ${buyFilter.status === 'ALL' ? 'on' : ''}" data-fst="ALL">All <b>${all.length}</b></span>
+      <div class="funnel-legend" id="buyLegend">
+        ${BUY_STATUSES.map(s => `<span class="leg" data-fst="${s.k}"><i style="background:${s.color}"></i>${s.label} <b>${counts[s.k]}</b></span>`).join('')}
+        <span class="leg" data-fst="ALL">All <b>${all.length}</b></span>
       </div>
     </div>
     <div class="buy-toolbar">
@@ -489,35 +543,68 @@ function renderBuy() {
         ${BUY_CATEGORIES.map(c => `<option value="${esc(c)}" ${buyFilter.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
       </select>
     </div>
-    <div class="card list-flush">
-      ${byArea.map(g => `
-        <div class="buy-group-head">${esc(g.area.code)} · ${esc(g.area.title)}</div>
-        ${g.items.map(it => {
-          const st = statusOf(it.status);
-          return `<div class="buy-row big" data-buy="${it.id}">
-            <div class="buy-info">
-              <b>${esc(it.name)}</b>
-              ${it.spec ? `<small>${esc(it.spec)}</small>` : ''}
-              <small class="dim">${esc(it.qty)} · ${esc(it.cat)}${it.note ? ` · 📝 ${esc(it.note)}` : ''}</small>
-            </div>
-            <span class="status-chip" style="background:${st.color}">${st.label}</span>
-          </div>`;
-        }).join('')}`).join('') || '<p class="empty-note">No materials match this filter.</p>'}
-    </div>
+    <div class="card list-flush" id="buyListWrap"></div>
   `;
+
+  const paintLegend = () => view.querySelectorAll('#buyLegend .leg').forEach(el =>
+    el.classList.toggle('on', el.dataset.fst === buyFilter.status));
+  paintLegend();
 
   view.querySelectorAll('[data-fst]').forEach(el => el.addEventListener('click', () => {
     buyFilter.status = buyFilter.status === el.dataset.fst ? 'ALL' : el.dataset.fst;
-    renderBuy();
+    paintLegend(); paintBuyList();
   }));
   const search = document.getElementById('buySearch');
   search.addEventListener('input', () => {
     buyFilter.q = search.value;
     clearTimeout(search._t);
-    search._t = setTimeout(renderBuy, 250);
+    search._t = setTimeout(paintBuyList, 200);
   });
-  document.getElementById('buyCat').addEventListener('change', e => { buyFilter.cat = e.target.value; renderBuy(); });
-  view.querySelectorAll('.buy-row').forEach(row => row.addEventListener('click', () => openBuyStatus(row.dataset.buy)));
+  document.getElementById('buyCat').addEventListener('change', e => { buyFilter.cat = e.target.value; paintBuyList(); });
+  paintBuyList();
+}
+
+function paintBuyList() {
+  const wrap = document.getElementById('buyListWrap');
+  if (!wrap) return;
+  const match = ({ area, item }) => {
+    if (buyFilter.status !== 'ALL' && item.status !== buyFilter.status) return false;
+    if (buyFilter.cat !== 'ALL' && item.cat !== buyFilter.cat) return false;
+    if (buyFilter.q) {
+      const q = buyFilter.q.toLowerCase();
+      if (!(item.name + ' ' + item.spec + ' ' + area.title + ' ' + area.code).toLowerCase().includes(q)) return false;
+    }
+    return true;
+  };
+  const filtered = allBuyItems().filter(match);
+
+  const byArea = [];
+  for (const x of filtered) {
+    let g = byArea[byArea.length - 1];
+    if (!g || g.area.id !== x.area.id) { g = { area: x.area, items: [] }; byArea.push(g); }
+    g.items.push(x.item);
+  }
+
+  wrap.innerHTML = byArea.map(g => `
+    <div class="buy-group-head">${esc(g.area.code)} · ${esc(g.area.title)}</div>
+    ${g.items.map(it => {
+      const st = statusOf(it.status);
+      return `<div class="buy-row big" data-buy="${it.id}">
+        <div class="buy-info">
+          <b>${esc(it.name)}</b>
+          ${it.spec ? `<small>${esc(it.spec)}</small>` : ''}
+          <small class="dim">${esc(it.qty)} · ${esc(it.cat)}${it.note ? ` · 📝 ${esc(it.note)}` : ''}</small>
+        </div>
+        <span class="status-chip" style="background:${st.color}">${st.label}</span>
+      </div>`;
+    }).join('')}`).join('') || '<p class="empty-note">No materials match this filter.</p>';
+
+  wrap.querySelectorAll('.buy-row').forEach(row => row.addEventListener('click', () => openBuyStatus(row.dataset.buy)));
+  wrap.querySelectorAll('.buy-row .status-chip').forEach(chip => chip.addEventListener('click', e => {
+    e.stopPropagation();
+    const found = findBuyItem(chip.closest('.buy-row').dataset.buy);
+    if (found) quickAdvance(found.item, () => activeTab === 'buy' ? renderBuy() : render());
+  }));
 }
 
 /* ============================== BQ (More → BQ) ============================== */
@@ -901,9 +988,10 @@ function renderMore() {
 
     <div class="card">
       <h2>Export & Backup</h2>
-      <p style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">All data lives on this device — export a backup regularly.</p>
+      <p style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">All data lives on this device — export a backup regularly.
+        Backups include site photos. Last backup: <b>${state.lastBackup ? fmtDate(state.lastBackup) : 'never'}</b></p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn ghost sm" id="exportJson">Backup (JSON)</button>
+        <button class="btn ghost sm" id="exportJson">Backup (incl. photos)</button>
         <label class="btn ghost sm" style="position:relative;overflow:hidden">Restore backup<input type="file" id="importJson" accept=".json,application/json" style="position:absolute;inset:0;opacity:0"></label>
         <button class="btn ghost sm" id="exportBuyCsv">Buy list CSV</button>
         <button class="btn ghost sm" id="exportBqCsv">BQ CSV</button>
@@ -937,18 +1025,21 @@ function renderMore() {
     save(); render(); toast('Project details saved');
   });
 
-  document.getElementById('exportJson').addEventListener('click', () => {
-    downloadFile(`tenn_bukit_baru_backup_${today()}.json`, JSON.stringify(state, null, 2), 'application/json');
-  });
+  document.getElementById('exportJson').addEventListener('click', exportBackup);
 
   document.getElementById('importJson').addEventListener('change', async e => {
     const f = e.target.files[0];
     if (!f) return;
     try {
       const data = JSON.parse(await f.text());
-      if (!data.project || !Array.isArray(data.sections)) throw new Error('bad shape');
+      const incoming = data.app === 'tenn-bb' && data.state ? data : { state: data, photos: {} };
+      if (!incoming.state.project || !Array.isArray(incoming.state.sections)) throw new Error('bad shape');
       if (!confirm('Restore this backup? Current data will be replaced.')) return;
-      state = migrate(data); save();
+      for (const [pid, dataUrl] of Object.entries(incoming.photos || {})) {
+        try { await photoDB.put(pid, await (await fetch(dataUrl)).blob()); }
+        catch (perr) { console.error('photo restore failed', pid, perr); }
+      }
+      state = migrate(incoming.state); save();
       render(); toast('Backup restored');
     } catch (err) { console.error(err); toast('Invalid backup file'); }
     e.target.value = '';
@@ -1055,6 +1146,31 @@ function downloadFile(name, content, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 
+/* Full backup = state + diary photos (base64). Restore handles both this
+   shape and older plain-state backups. */
+async function exportBackup() {
+  const photoIds = new Set(state.diary.flatMap(e => e.photoIds || []));
+  const photos = {};
+  for (const id of photoIds) {
+    const blob = await photoDB.get(id).catch(() => null);
+    if (blob) photos[id] = await blobToDataURL(blob);
+  }
+  state.lastBackup = today();
+  save();
+  downloadFile(`tenn_bukit_baru_backup_${today()}.json`,
+    JSON.stringify({ app: 'tenn-bb', state, photos }), 'application/json');
+  toast('Backup exported — keep a copy off this phone');
+  render();
+}
+function blobToDataURL(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+
 /* ============================== Modal & toast ============================== */
 /* Modals stack: opening a sheet from inside another modal layers on top,
    and closeModal() pops only the topmost layer. */
@@ -1071,12 +1187,19 @@ function modal(html, wire) {
 function closeModal() { modalRoot.lastElementChild?.remove(); }
 
 let toastTimer;
-function toast(msg) {
+function toast(msg, action) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.innerHTML = '';
+  t.append(document.createTextNode(msg));
+  if (action) {
+    const b = document.createElement('button');
+    b.textContent = action.label;
+    b.addEventListener('click', () => { t.hidden = true; action.fn(); });
+    t.append(b);
+  }
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.hidden = true, 2600);
+  toastTimer = setTimeout(() => t.hidden = true, action ? 5000 : 2600);
 }
 
 /* ============================== Boot ============================== */
