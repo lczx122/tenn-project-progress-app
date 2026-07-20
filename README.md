@@ -1,56 +1,64 @@
-# TENN · Ambience Bukit Baru Showroom — Progress Tracker (PWA)
+# TENN · Ambience Bukit Baru Showroom — Site Progress Tracker (PWA)
 
-An offline-first Progressive Web App for tracking site progress on the
-**Lot 26662, Bukit Baru Sales Gallery — ID Works** project, from BQ to final claim.
+An offline-first Progressive Web App for detailed progress tracking of the
+**Lot 26662, Bukit Baru Sales Gallery — ID Works** project: 37 work areas,
+a 170-item procurement buy list, stage-by-stage tracking, progress claims
+and a site diary.
 
-## Features
+## How it's organised
 
-- **Dashboard** — contract sum, work-done value, claimed-to-date, overall and
-  per-section progress, days remaining to target completion.
-- **BQ** — bill of quantities grouped by section (Show Unit Type A / Type B /
-  Common Area, editable). Tap any item to update its progress % with a slider
-  or quick buttons. Add/edit/delete sections and items freely.
-- **Claims** — one tap generates the next progress claim from all unclaimed
-  progress, in TENN's standard claim format (Item / Description / Unit / Qty /
-  Rate / Amount / Previous / This / Total claim %). View as a printable
-  statement (print → save as PDF) or export CSV. Certified progress is locked
-  so item progress can't be wound back below what was already claimed.
-- **Site Diary** — dated log entries with compressed site photos, stored on
-  device.
-- **Setup** — project details, CSV import of the real BQ
-  (`Section, Code, Description, Unit, Qty, Rate`), CSV export, and full
-  JSON backup/restore.
+The primary tracking unit is the **work area** (Reception Counter, Front
+Backdrop, Master Bedroom Feature Wall, …) taken from the project's
+procurement list — read against the ID Details Drawings (260710-Amended)
+and Tender Clarifications (04 Mar 2025).
+
+- **Home** — overall site progress, procurement pipeline funnel,
+  needs-attention flags, per-part progress, timeline countdown.
+- **Areas** — every work area tracked through 8 weighted stages:
+  site measurement (5%) → samples approved (10%) → materials ordered (10%)
+  → fabrication (30%) → delivered to site (5%) → installation (30%) →
+  lighting & electrical (5%) → touch-up & QC (5%). Stages can be marked
+  N/A (weight redistributes). Each area lists its materials with status
+  chips and its "by others — do not buy" exclusions.
+- **Buy List** — all procurement items with spec, estimated qty and
+  supplier category (Laminate, Fluted, Glass & Mirror, Stone, LED,
+  Metalwork, Timber & Board, Fabric, Hardware, Paint). Status per item:
+  To order → Sample pending → Ordered → Delivered → Installed (or N/A),
+  plus a note field for PO numbers / suppliers / ETAs. Filter by status,
+  category or search. Key clarifications are baked into the specs
+  (gold strips = SS gold finish, colour-glass counter tops, granite
+  toilet basin tops, hidden utility door, extra TV backing).
+- **Diary** — dated site log entries with compressed photos.
+- **More** — Bill of Quantities (68 tender items), progress claims in
+  TENN's claim format with retention deduction, project details,
+  CSV exports (buy list & BQ), JSON backup/restore.
+
+**Area progress drives claims:** each area is linked to its BQ items, so
+ticking stages updates BQ percentages automatically (never below what's
+already certified in a claim). Generate a claim any time from More →
+Progress Claims.
 
 ## Data
 
-Everything is stored locally on the device (localStorage + IndexedDB) — no
-server, works fully offline once installed. Use **Setup → Export backup**
-regularly to keep a copy.
-
-The seeded BQ contains the actual line items from the received tender BQ
-(`BQ- Show Unit Type A & B (ID Works).xlsx`): Preliminaries, Main Lobby,
-Model House Base, Garden Seating Area, Show Unit Type A and Show Unit
-Type B — 68 items. The tender copy is unpriced, so rates are 0 — enter
-them per item, or export the CSV template (**Setup → Download template**),
-price it, and re-import. Claims deduct the contract's 5% retention
-(adjustable in Setup).
+Everything is stored on-device (localStorage + IndexedDB) — no server,
+fully offline once installed. Export a backup regularly from
+**More → Export & Backup**. The BQ is the unpriced tender copy; enter
+rates per item or import a priced CSV.
 
 ## Running it
 
-It's a static site — any web server works, but a **service worker needs
-HTTPS or localhost**:
+Static site — any web server works, but a **service worker needs HTTPS or
+localhost**:
 
 ```bash
-# local preview
-python3 -m http.server 8080
-# then open http://localhost:8080
+python3 -m http.server 8080   # then open http://localhost:8080
 ```
 
-For phone use, host it on any static host with HTTPS (GitHub Pages, Netlify,
-Cloudflare Pages…). Open the URL in Chrome/Safari on the phone and choose
-**Add to Home Screen** — it installs like an app and works offline on site.
+For phones, host on any HTTPS static host (GitHub Pages, Netlify, …),
+open in Chrome/Safari and **Add to Home Screen**.
 
 ## Stack
 
-Plain HTML/CSS/JS, no build step, no dependencies. `sw.js` pre-caches the app
-shell (bump `CACHE_VERSION` when files change).
+Plain HTML/CSS/JS, no build step, no dependencies. Seed data in
+`js/data.js`; app logic in `js/app.js`. Bump `CACHE_VERSION` in `sw.js`
+when files change.
