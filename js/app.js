@@ -37,6 +37,7 @@ function seedAreas() {
       id: uid(), part: p.part, partTitle: p.partTitle,
       code: a.code, title: a.title, dwg: a.dwg, bqSec: a.bqSec, bqCodes: a.bqCodes,
       stages: Object.fromEntries(STAGES.map(s => [s.k, 'todo'])),
+      stageDates: {},
       items: a.items.map(it => ({ id: uid(), status: 'pending', note: '', ...it })),
       excluded: a.excluded, note: '',
     });
@@ -44,7 +45,7 @@ function seedAreas() {
   return areas;
 }
 function seedState() {
-  return { seedVersion: SEED_VERSION, project: seedProject(), sections: seedSections(), areas: seedAreas(), claims: [], diary: [] };
+  return { seedVersion: SEED_VERSION, project: seedProject(), sections: seedSections(), areas: seedAreas(), claims: [], diary: [], activity: [] };
 }
 
 /* ============================== State ============================== */
@@ -74,6 +75,8 @@ function migrate(s) {
   if (!Array.isArray(s.sections) || !s.sections.length) { s.sections = seedSections(); changed = true; }
   if (!Array.isArray(s.areas) || !s.areas.length) { s.areas = seedAreas(); changed = true; }
   if (s.project.retentionPct == null) { s.project.retentionPct = 5; changed = true; }
+  if (!Array.isArray(s.activity)) { s.activity = []; changed = true; }
+  for (const a of s.areas) if (!a.stageDates) { a.stageDates = {}; changed = true; }
   if (s.seedVersion !== SEED_VERSION) { s.seedVersion = SEED_VERSION; changed = true; }
   if (changed) localStorage.setItem(STORE_KEY, JSON.stringify(s));
   return s;
@@ -95,6 +98,10 @@ function fmtDate(iso) {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function statusOf(k) { return BUY_STATUSES.find(s => s.k === k) || BUY_STATUSES[0]; }
+function logActivity(text) {
+  state.activity.push({ id: uid(), date: today(), text });
+  if (state.activity.length > 300) state.activity = state.activity.slice(-300);
+}
 
 /* ============================== Derived — areas ============================== */
 function areaPct(area) {
@@ -391,11 +398,15 @@ function openAreaModal(areaId) {
     root.querySelector('.area-modal-pct').textContent = Math.round(pct) + '%';
     root.querySelector('.area-modal-bar i').style.width = pct + '%';
     root.querySelectorAll('.stage-row').forEach(row => {
-      const v = a.stages[row.dataset.stage];
+      const k = row.dataset.stage;
+      const st = STAGES.find(s => s.k === k);
+      const v = a.stages[k];
       row.classList.toggle('done', v === 'done');
       row.classList.toggle('na', v === 'na');
       row.querySelector('.stage-check').textContent = v === 'done' ? '✓' : '';
       row.querySelector('.stage-na').textContent = v === 'na' ? 'N/A ✓' : 'N/A';
+      row.querySelector('.stage-meta').textContent =
+        v === 'done' && a.stageDates?.[k] ? fmtDate(a.stageDates[k]) : st.w + '%';
     });
     root.querySelectorAll('.buy-row').forEach(row => {
       const it = a.items.find(i => i.id === row.dataset.buy);
@@ -419,7 +430,7 @@ function openAreaModal(areaId) {
       ${STAGES.map(st => `
         <div class="stage-row" data-stage="${st.k}">
           <button class="stage-check" aria-label="toggle ${st.label}"></button>
-          <span class="stage-label">${st.label} <small class="dim">${st.w}%</small></span>
+          <span class="stage-label">${st.label} <small class="dim stage-meta"></small></span>
           <button class="stage-na">N/A</button>
         </div>`).join('')}
     </div>
@@ -450,7 +461,12 @@ function openAreaModal(areaId) {
     root.querySelectorAll('.stage-row').forEach(row => {
       const k = row.dataset.stage;
       row.querySelector('.stage-check').addEventListener('click', () => {
-        a.stages[k] = a.stages[k] === 'done' ? 'todo' : 'done';
+        const to = a.stages[k] === 'done' ? 'todo' : 'done';
+        a.stages[k] = to;
+        if (to === 'done') {
+          a.stageDates[k] = today();
+          logActivity(`${a.code} · ${STAGES.find(s => s.k === k).label} done`);
+        } else delete a.stageDates[k];
         syncAreaToBQ(a); save(); paint(root);
       });
       row.querySelector('.stage-na').addEventListener('click', () => {
@@ -479,12 +495,20 @@ function quickAdvance(item, repaint) {
   if (item.status === 'na') { openBuyStatus(item.id, repaint); return; }
   if (item.status === 'installed') { toast('Already installed — tap the item to change'); return; }
   const order = ['pending', 'sample', 'ordered', 'delivered', 'installed'];
-  const prev = item.status;
+  const prev = item.status, prevDate = item.statusDate;
   item.status = order[order.indexOf(prev) + 1] || 'installed';
+  item.statusDate = today();
+  const areaCode = findBuyItem(item.id)?.area.code || '';
+  const entry = { id: uid(), date: today(), text: `${areaCode} · ${item.name.slice(0, 50)} → ${statusOf(item.status).label}` };
+  state.activity.push(entry);
   save(); repaint();
   toast(`→ ${statusOf(item.status).label}: ${item.name.slice(0, 40)}`, {
     label: 'Undo',
-    fn: () => { item.status = prev; save(); repaint(); },
+    fn: () => {
+      item.status = prev; item.statusDate = prevDate;
+      state.activity = state.activity.filter(x => x.id !== entry.id);
+      save(); repaint();
+    },
   });
 }
 
@@ -499,6 +523,7 @@ function openBuyStatus(buyId, onDone) {
     <p style="font-size:14px;font-weight:700;margin-bottom:2px">${esc(item.name)}</p>
     ${item.spec ? `<p class="dim" style="font-size:12px;margin-bottom:2px">${esc(item.spec)}</p>` : ''}
     <p class="dim" style="font-size:12px">Qty: <b>${esc(item.qty)}</b> · ${esc(item.cat)} · ${esc(area.code)} ${esc(area.title)}</p>
+    ${item.statusDate ? `<p class="dim" style="font-size:11px;margin-top:2px">Last status change: ${fmtDate(item.statusDate)}</p>` : ''}
     <div class="status-grid">
       ${BUY_STATUSES.map(s => `
         <button class="status-btn ${item.status === s.k ? 'on' : ''}" data-st="${s.k}" style="--c:${s.color}">${s.label}</button>`).join('')}
@@ -507,12 +532,18 @@ function openBuyStatus(buyId, onDone) {
       <textarea id="buyNote" rows="2">${esc(item.note || '')}</textarea></div>
     <div class="modal-actions"><button class="btn accent" id="saveBuy">Save</button></div>
   `, root => {
+    let sel = item.status;
     root.querySelectorAll('.status-btn').forEach(b => b.addEventListener('click', () => {
-      item.status = b.dataset.st;
-      root.querySelectorAll('.status-btn').forEach(x => x.classList.toggle('on', x.dataset.st === item.status));
+      sel = b.dataset.st;
+      root.querySelectorAll('.status-btn').forEach(x => x.classList.toggle('on', x.dataset.st === sel));
     }));
     root.querySelector('#saveBuy').addEventListener('click', () => {
       item.note = root.querySelector('#buyNote').value.trim();
+      if (sel !== item.status) {
+        item.status = sel;
+        item.statusDate = today();
+        logActivity(`${area.code} · ${item.name.slice(0, 50)} → ${statusOf(sel).label}`);
+      }
       save(); closeModal();
       if (onDone) onDone(); else render();
     });
@@ -520,8 +551,13 @@ function openBuyStatus(buyId, onDone) {
 }
 
 /* ============================== Buy list ============================== */
-/* The toolbar (funnel, search, category) renders once; only the list body
-   re-paints on filter/search changes so the search input keeps focus. */
+/* Toolbar renders once; only the list body repaints on filter/search changes
+   so the search input keeps focus. Grouping: by area (site view) or by
+   supplier category (ordering view, with consolidated est. quantities). */
+let buyGroup = 'area';       // 'area' | 'cat'
+let selectMode = false;
+let selected = new Set();
+
 function renderBuy() {
   const all = allBuyItems();
   const counts = buyCounts(all.map(x => x.item));
@@ -543,7 +579,22 @@ function renderBuy() {
         ${BUY_CATEGORIES.map(c => `<option value="${esc(c)}" ${buyFilter.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
       </select>
     </div>
+    <div class="buy-toolbar2">
+      <div class="seg">
+        <button class="seg-btn ${buyGroup === 'area' ? 'on' : ''}" data-grp="area">By Area</button>
+        <button class="seg-btn ${buyGroup === 'cat' ? 'on' : ''}" data-grp="cat">By Supplier</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn ghost sm" id="selectBtn">${selectMode ? 'Cancel' : 'Select'}</button>
+      <button class="btn sm" id="orderSheetBtn">Order Sheet</button>
+    </div>
     <div class="card list-flush" id="buyListWrap"></div>
+    ${selectMode ? `<div class="bulk-bar">
+      <span><b id="selCount">${selected.size}</b> selected</span>
+      <button class="btn ghost sm" id="selAll">All shown</button>
+      <select id="bulkStatus">${BUY_STATUSES.map(s => `<option value="${s.k}">${s.label}</option>`).join('')}</select>
+      <button class="btn accent sm" id="bulkApply">Apply</button>
+    </div>` : ''}
   `;
 
   const paintLegend = () => view.querySelectorAll('#buyLegend .leg').forEach(el =>
@@ -561,13 +612,27 @@ function renderBuy() {
     search._t = setTimeout(paintBuyList, 200);
   });
   document.getElementById('buyCat').addEventListener('change', e => { buyFilter.cat = e.target.value; paintBuyList(); });
+  view.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => {
+    buyGroup = b.dataset.grp;
+    view.querySelectorAll('[data-grp]').forEach(x => x.classList.toggle('on', x.dataset.grp === buyGroup));
+    paintBuyList();
+  }));
+  document.getElementById('selectBtn').addEventListener('click', () => {
+    selectMode = !selectMode; selected.clear(); renderBuy();
+  });
+  document.getElementById('orderSheetBtn').addEventListener('click', openOrderSheet);
+  if (selectMode) {
+    document.getElementById('selAll').addEventListener('click', () => {
+      filteredBuy().forEach(x => selected.add(x.item.id));
+      paintBuyList(); paintSelCount();
+    });
+    document.getElementById('bulkApply').addEventListener('click', applyBulkStatus);
+  }
   paintBuyList();
 }
 
-function paintBuyList() {
-  const wrap = document.getElementById('buyListWrap');
-  if (!wrap) return;
-  const match = ({ area, item }) => {
+function filteredBuy() {
+  return allBuyItems().filter(({ area, item }) => {
     if (buyFilter.status !== 'ALL' && item.status !== buyFilter.status) return false;
     if (buyFilter.cat !== 'ALL' && item.cat !== buyFilter.cat) return false;
     if (buyFilter.q) {
@@ -575,36 +640,184 @@ function paintBuyList() {
       if (!(item.name + ' ' + item.spec + ' ' + area.title + ' ' + area.code).toLowerCase().includes(q)) return false;
     }
     return true;
-  };
-  const filtered = allBuyItems().filter(match);
+  });
+}
 
-  const byArea = [];
-  for (const x of filtered) {
-    let g = byArea[byArea.length - 1];
-    if (!g || g.area.id !== x.area.id) { g = { area: x.area, items: [] }; byArea.push(g); }
-    g.items.push(x.item);
+function buyGroups(filtered) {
+  const groups = [];
+  if (buyGroup === 'cat') {
+    for (const cat of BUY_CATEGORIES) {
+      const items = filtered.filter(x => x.item.cat === cat);
+      if (items.length) groups.push({ header: `${cat} · ${items.length} items`, sub: aggQty(items.map(x => x.item)), items });
+    }
+  } else {
+    for (const x of filtered) {
+      let g = groups[groups.length - 1];
+      if (!g || g._areaId !== x.area.id) {
+        g = { _areaId: x.area.id, header: `${x.area.code} · ${x.area.title}`, sub: '', items: [] };
+        groups.push(g);
+      }
+      g.items.push(x);
+    }
   }
+  return groups;
+}
 
-  wrap.innerHTML = byArea.map(g => `
-    <div class="buy-group-head">${esc(g.area.code)} · ${esc(g.area.title)}</div>
-    ${g.items.map(it => {
+/* Best-effort consolidated totals from qty strings like "±4–5 sheets", "±60 m".
+   Unparseable quantities ("lot", composites) are counted as lots/misc. */
+function aggQty(items) {
+  const totals = new Map();
+  let misc = 0;
+  const re = /±?\s*([\d.]+)(?:\s*[–-]\s*([\d.]+))?\s*(m²|m³|sheets?|sets?|pcs?|pc|nos?|no|slabs?|drivers?|locksets?|drawers?|tiers?|runs?|strips?|L\b|m\b)/i;
+  for (const it of items) {
+    const m = String(it.qty).match(re);
+    if (!m) { misc++; continue; }
+    const lo = parseFloat(m[1]), hi = m[2] ? parseFloat(m[2]) : parseFloat(m[1]);
+    let unit = m[3].toLowerCase();
+    if (!['m²', 'm³', 'm', 'l'].includes(unit)) unit = unit.replace(/s$/, '') + 's';
+    const t = totals.get(unit) || [0, 0];
+    totals.set(unit, [t[0] + lo, t[1] + hi]);
+  }
+  const parts = [...totals].map(([u, [lo, hi]]) =>
+    `±${lo === hi ? fmtNum(lo) : fmtNum(lo) + '–' + fmtNum(hi)} ${u === 'l' ? 'L' : u}`);
+  if (misc) parts.push(`${misc} lot/misc`);
+  return parts.length ? 'est. total: ' + parts.join(' · ') : '';
+}
+function fmtNum(n) { return Number.isInteger(n) ? n : n.toFixed(1); }
+
+function paintBuyList() {
+  const wrap = document.getElementById('buyListWrap');
+  if (!wrap) return;
+  const filtered = filteredBuy();
+  const groups = buyGroups(filtered);
+
+  wrap.innerHTML = groups.map(g => `
+    <div class="buy-group-head">${esc(g.header)}${g.sub ? `<small>${esc(g.sub)}</small>` : ''}</div>
+    ${g.items.map(x => {
+      const it = x.item, area = x.area;
       const st = statusOf(it.status);
-      return `<div class="buy-row big" data-buy="${it.id}">
+      return `<div class="buy-row big ${selected.has(it.id) ? 'selected' : ''}" data-buy="${it.id}">
+        ${selectMode ? `<span class="sel-box">${selected.has(it.id) ? '☑' : '☐'}</span>` : ''}
         <div class="buy-info">
           <b>${esc(it.name)}</b>
           ${it.spec ? `<small>${esc(it.spec)}</small>` : ''}
-          <small class="dim">${esc(it.qty)} · ${esc(it.cat)}${it.note ? ` · 📝 ${esc(it.note)}` : ''}</small>
+          <small class="dim">${buyGroup === 'cat' ? esc(area.code) + ' · ' : ''}${esc(it.qty)} · ${buyGroup === 'cat' ? esc(area.title) : esc(it.cat)}${it.note ? ` · 📝 ${esc(it.note)}` : ''}</small>
         </div>
         <span class="status-chip" style="background:${st.color}">${st.label}</span>
       </div>`;
     }).join('')}`).join('') || '<p class="empty-note">No materials match this filter.</p>';
 
-  wrap.querySelectorAll('.buy-row').forEach(row => row.addEventListener('click', () => openBuyStatus(row.dataset.buy)));
+  wrap.querySelectorAll('.buy-row').forEach(row => row.addEventListener('click', () => {
+    if (selectMode) {
+      const id = row.dataset.buy;
+      selected.has(id) ? selected.delete(id) : selected.add(id);
+      row.classList.toggle('selected');
+      const box = row.querySelector('.sel-box');
+      if (box) box.textContent = selected.has(id) ? '☑' : '☐';
+      paintSelCount();
+      return;
+    }
+    openBuyStatus(row.dataset.buy);
+  }));
   wrap.querySelectorAll('.buy-row .status-chip').forEach(chip => chip.addEventListener('click', e => {
+    if (selectMode) return; // row handler manages selection
     e.stopPropagation();
     const found = findBuyItem(chip.closest('.buy-row').dataset.buy);
     if (found) quickAdvance(found.item, () => activeTab === 'buy' ? renderBuy() : render());
   }));
+}
+
+function paintSelCount() {
+  const el = document.getElementById('selCount');
+  if (el) el.textContent = selected.size;
+}
+
+function applyBulkStatus() {
+  if (!selected.size) { toast('Nothing selected'); return; }
+  const status = document.getElementById('bulkStatus').value;
+  const snapshot = [];
+  for (const id of selected) {
+    const found = findBuyItem(id);
+    if (!found) continue;
+    snapshot.push({ item: found.item, status: found.item.status, statusDate: found.item.statusDate });
+    found.item.status = status;
+    found.item.statusDate = today();
+  }
+  const entry = { id: uid(), date: today(), text: `${snapshot.length} materials → ${statusOf(status).label} (bulk update)` };
+  state.activity.push(entry);
+  const n = snapshot.length;
+  selectMode = false; selected.clear();
+  save(); renderBuy();
+  toast(`${n} items → ${statusOf(status).label}`, {
+    label: 'Undo',
+    fn: () => {
+      for (const s of snapshot) { s.item.status = s.status; s.item.statusDate = s.statusDate; }
+      state.activity = state.activity.filter(x => x.id !== entry.id);
+      save();
+      if (activeTab === 'buy') renderBuy(); else render();
+    },
+  });
+}
+
+/* Printable purchase-order sheet for the currently filtered/grouped items */
+function openOrderSheet() {
+  const filtered = filteredBuy();
+  if (!filtered.length) { toast('No items in the current filter'); return; }
+  const groups = buyGroups(filtered);
+  const p = state.project;
+  const filterDesc = [
+    buyFilter.status !== 'ALL' ? statusOf(buyFilter.status).label : null,
+    buyFilter.cat !== 'ALL' ? buyFilter.cat : null,
+    buyFilter.q ? `"${buyFilter.q}"` : null,
+  ].filter(Boolean).join(' · ') || 'All items';
+  let n = 0;
+
+  modal(`
+    <div class="modal-head no-print"><h3>Order Sheet</h3><button class="modal-close">✕</button></div>
+    <div class="claim-doc">
+      <div class="doc-head">
+        <b>${esc(p.contractor)}</b>
+        <span>PROJECT: ${esc(p.name)} — ${esc(p.lot)}</span>
+        <span>MATERIAL ORDER SHEET · ${fmtDate(today())} · Filter: ${esc(filterDesc)} · ${filtered.length} items</span>
+        <span>Supplier: ______________________ &nbsp; PO No.: ____________ &nbsp; Required by: ____________</span>
+      </div>
+      <div class="claim-table-wrap">
+        <table class="claim-table">
+          <thead><tr>
+            <th>#</th><th>Material / Spec</th><th class="num">Est. Qty</th><th>For Area</th><th>Status</th><th>Unit Price</th><th>Amount</th>
+          </tr></thead>
+          <tbody>
+            ${groups.map(g => `
+              <tr class="sect"><td colspan="7">${esc(g.header)}${g.sub ? ' — ' + esc(g.sub) : ''}</td></tr>
+              ${g.items.map(x => `<tr>
+                <td>${++n}</td>
+                <td><b>${esc(x.item.name)}</b>${x.item.spec ? '<br>' + esc(x.item.spec) : ''}${x.item.note ? '<br>📝 ' + esc(x.item.note) : ''}</td>
+                <td class="num">${esc(x.item.qty)}</td>
+                <td>${esc(x.area.code)}</td>
+                <td>${esc(statusOf(x.item.status).label)}</td>
+                <td></td><td></td>
+              </tr>`).join('')}`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="dim" style="font-size:10px;margin-top:8px">Quantities are estimates from drawings — verify site dimensions before ordering; submit samples for client approval before bulk orders (BQ notes 13/18/19).</p>
+    </div>
+    <div class="modal-actions no-print">
+      <button class="btn ghost" id="orderCsv">CSV</button>
+      <button class="btn accent" id="orderPrint">Print / PDF</button>
+    </div>
+  `, root => {
+    root.querySelector('#orderPrint').addEventListener('click', () => window.print());
+    root.querySelector('#orderCsv').addEventListener('click', () => {
+      const rows = [
+        [p.contractor], [`PROJECT: ${p.name} — ${p.lot}`], [`MATERIAL ORDER SHEET · ${today()} · Filter: ${filterDesc}`], [],
+        ['GROUP', 'MATERIAL', 'SPEC', 'EST. QTY', 'FOR AREA', 'STATUS', 'NOTE', 'UNIT PRICE', 'AMOUNT'],
+      ];
+      for (const g of groups) for (const x of g.items)
+        rows.push([g.header, x.item.name, x.item.spec, x.item.qty, `${x.area.code} ${x.area.title}`, statusOf(x.item.status).label, x.item.note, '', '']);
+      downloadFile(`OrderSheet_${today()}.csv`, toCSV(rows), 'text/csv');
+    });
+  });
 }
 
 /* ============================== BQ (More → BQ) ============================== */
@@ -742,6 +955,7 @@ function createClaim() {
     totalThis: lines.reduce((a, l) => a + l.amountThis, 0),
   };
   state.claims.push(claim);
+  logActivity(`Progress Claim ${no} generated — ${fmtRM(claim.totalThis)}`);
   save(); render();
   toast(`Claim ${no} generated`);
   openClaimDoc(claim.id);
@@ -858,6 +1072,12 @@ function renderDiary() {
     <div class="card list-flush">
       <h2>Site Log</h2>
       <div id="diaryList">${state.diary.length ? '' : '<p class="empty-note">No entries yet. Log daily site progress here — photos included.</p>'}</div>
+    </div>
+    <div class="card list-flush">
+      <h2>Recent Activity</h2>
+      ${state.activity.length ? [...state.activity].reverse().slice(0, 40).map(x =>
+        `<div class="act-row"><span class="act-date">${fmtDate(x.date)}</span><span class="act-text">${esc(x.text)}</span></div>`).join('')
+      : '<p class="empty-note">Stage ticks, material status changes and claims are logged here automatically.</p>'}
     </div>
   `;
   document.getElementById('addEntry').addEventListener('click', addDiaryEntry);

@@ -25,10 +25,16 @@ and Tender Clarifications (04 Mar 2025).
   Metalwork, Timber & Board, Fabric, Hardware, Paint). Status per item:
   To order → Sample pending → Ordered → Delivered → Installed (or N/A),
   plus a note field for PO numbers / suppliers / ETAs. Filter by status,
-  category or search. Key clarifications are baked into the specs
-  (gold strips = SS gold finish, colour-glass counter tops, granite
-  toilet basin tops, hidden utility door, extra TV backing).
-- **Diary** — dated site log entries with compressed photos.
+  category or search; group **by area** (site view) or **by supplier**
+  (ordering view, with consolidated estimated totals per category).
+  Multi-select for bulk status updates with undo, and a printable
+  **order sheet** (print/PDF or CSV) generated from any filtered set.
+  Key clarifications are baked into the specs (gold strips = SS gold
+  finish, colour-glass counter tops, granite toilet basin tops, hidden
+  utility door, extra TV backing).
+- **Diary** — dated site log entries with compressed photos, plus an
+  auto-logged activity feed (stage completions with date stamps,
+  material status changes, claims).
 - **More** — Bill of Quantities (68 tender items), progress claims in
   TENN's claim format with retention deduction, project details,
   CSV exports (buy list & BQ), JSON backup/restore.
