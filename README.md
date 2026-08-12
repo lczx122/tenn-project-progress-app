@@ -1,70 +1,52 @@
-# TENN · Ambience Bukit Baru Showroom — Site Progress Tracker (PWA)
+# TENN Site Tracker
 
-An offline-first Progressive Web App for detailed progress tracking of the
-**Lot 26662, Bukit Baru Sales Gallery — ID Works** project: 37 work areas,
-a 170-item procurement buy list, stage-by-stage tracking, progress claims
-and a site diary.
+Multi-user project progress tracker for TENN Fasteners — a self-hosted web
+app the whole team shares: everyone signs in with their own account and sees
+the same live data from any phone or computer.
 
-## How it's organised
+Built with **zero npm dependencies**: Node.js built-ins only (`node:http`,
+`node:sqlite`, `node:crypto`). One process, one SQLite file.
 
-The primary tracking unit is the **work area** (Reception Counter, Front
-Backdrop, Master Bedroom Feature Wall, …) taken from the project's
-procurement list — read against the ID Details Drawings (260710-Amended)
-and Tender Clarifications (04 Mar 2025).
+## Features
 
-- **Home** — overall site progress, procurement pipeline funnel,
-  needs-attention flags, per-part progress, timeline countdown.
-- **Areas** — every work area tracked through 8 weighted stages:
-  site measurement (5%) → samples approved (10%) → materials ordered (10%)
-  → fabrication (30%) → delivered to site (5%) → installation (30%) →
-  lighting & electrical (5%) → touch-up & QC (5%). Stages can be marked
-  N/A (weight redistributes). Each area lists its materials with status
-  chips and its "by others — do not buy" exclusions.
-- **Buy List** — all procurement items with spec, estimated qty and
-  supplier category (Laminate, Fluted, Glass & Mirror, Stone, LED,
-  Metalwork, Timber & Board, Fabric, Hardware, Paint). Status per item:
-  To order → Sample pending → Ordered → Delivered → Installed (or N/A),
-  plus a note field for PO numbers / suppliers / ETAs. Filter by status,
-  category or search; group **by area** (site view) or **by supplier**
-  (ordering view, with consolidated estimated totals per category).
-  Multi-select for bulk status updates with undo, and a printable
-  **order sheet** (print/PDF or CSV) generated from any filtered set.
-  Key clarifications are baked into the specs (gold strips = SS gold
-  finish, colour-glass counter tops, granite toilet basin tops, hidden
-  utility door, extra TV backing).
-- **Diary** — dated site log entries with compressed photos, plus an
-  auto-logged activity feed (stage completions with date stamps,
-  material status changes, claims).
-- **More** — Bill of Quantities (68 tender items), progress claims in
-  TENN's claim format with retention deduction, project details,
-  CSV exports (buy list & BQ), JSON backup/restore.
-
-**Area progress drives claims:** each area is linked to its BQ items, so
-ticking stages updates BQ percentages automatically (never below what's
-already certified in a claim). Generate a claim any time from More →
-Progress Claims.
-
-## Data
-
-Everything is stored on-device (localStorage + IndexedDB) — no server,
-fully offline once installed. Export a backup regularly from
-**More → Export & Backup**. The BQ is the unpriced tender copy; enter
-rates per item or import a priced CSV.
+- **Team accounts** — first run creates the admin; admins add members and
+  manage roles. Sessions are httpOnly cookies; passwords are scrypt-hashed.
+- **Projects** — as many as you need, each with client and start/target dates.
+- **Progress** — work groups → items with 0–100% progress; group and project
+  percentages roll up automatically. Every update records who and when.
+- **Materials** — procurement pipeline per project (To order → Sample pending
+  → Ordered → Delivered → Installed / N/A) with spec, qty, category, notes,
+  status filters, search, and bulk updates.
+- **Site diary** — dated entries with photos (compressed client-side, stored
+  on the server, only visible to logged-in users).
+- **Activity feed** — every change by every member, newest first.
+- **Live sync** — clients poll a per-project revision number and refresh when
+  someone else changes something (a green dot pulses in the header).
+- **CSV import/export** for both materials and work items.
 
 ## Running it
 
-Static site — any web server works, but a **service worker needs HTTPS or
-localhost**:
+Requires Node.js 22.5+ (for the built-in SQLite).
 
 ```bash
-python3 -m http.server 8080   # then open http://localhost:8080
+npm start            # serves on http://localhost:3000
+PORT=8080 npm start  # custom port
 ```
 
-For phones, host on any HTTPS static host (GitHub Pages, Netlify, …),
-open in Chrome/Safari and **Add to Home Screen**.
+Data lives in `data/tracker.db` and `data/uploads/` (both gitignored) —
+back that folder up. To run it for the team, deploy on any small VPS or
+always-on machine and put it behind HTTPS (e.g. Caddy or nginx with
+Let's Encrypt), then open the URL on each phone and Add to Home Screen.
 
-## Stack
+First visit shows the **setup screen** — create the admin account, then add
+your team members from the Team button.
 
-Plain HTML/CSS/JS, no build step, no dependencies. Seed data in
-`js/data.js`; app logic in `js/app.js`. Bump `CACHE_VERSION` in `sw.js`
-when files change.
+## Layout
+
+```
+server/index.js   HTTP server: static files, /api router, /uploads
+server/db.js      SQLite schema + sessions + activity/rev helpers
+server/api.js     JSON API route handlers
+public/           SPA (vanilla JS, no build step)
+data/             SQLite DB + uploaded photos (gitignored)
+```
