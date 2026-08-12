@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+html,body { margin:0; height:100%; background:#3A3D3B; font-family:'IBM Plex Sans',sans-serif; }
+a { color:#0F766E; } a:hover { color:#0B5A54; }
+textarea, input { font-family:'IBM Plex Sans',sans-serif; }
+textarea:focus, input:focus { outline:2px solid #0F766E; }
+</style>
+</helmet>
+<div style="height:100dvh; max-width:430px; margin:0 auto; background:#F6F5F3; display:flex; flex-direction:column; position:relative; overflow:hidden">
+
+  <div style="flex:1; overflow:auto; display:flex; flex-direction:column">
+
+  <!-- HOME -->
+  <sc-if value="{{ showHome }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:18px 20px 14px; display:flex; align-items:center; justify-content:space-between">
+      <div>
+        <div style="font-size:12px; color:#6B7370; font-weight:500">PROJECT</div>
+        <div style="display:flex; align-items:center; gap:6px; font-size:21px; font-weight:700; color:#1B1F1E">Faithview Gallery <span style="font-size:12px; color:#0F766E">▼</span></div>
+      </div>
+      <div style="width:40px; height:40px; border-radius:50%; background:#0F766E; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px">SV</div>
+    </div>
+    <div style="padding:0 20px 16px; display:flex; flex-direction:column; gap:14px">
+      <div style="background:#0F766E; border-radius:16px; padding:16px; color:#fff; cursor:pointer" onClick="{{ goReport }}">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:13px; font-weight:600; opacity:0.85">TODAY'S SOP · TUE 12 AUG</div>
+          <div style="font-size:12px; background:rgba(255,255,255,0.18); border-radius:99px; padding:3px 10px; font-weight:600">{{ sopDone }} of 5 done</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px">
+          <sc-for list="{{ sopSteps }}" as="s" hint-placeholder-count="4">
+            <div style="flex:1; background:rgba(255,255,255,0.14); border-radius:10px; padding:10px 6px; text-align:center">
+              <div style="font-size:17px">{{ s.mark }}</div><div style="font-size:10px; margin-top:2px; opacity:0.9">{{ s.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:12px; background:#fff; color:#0F766E; border-radius:10px; text-align:center; padding:11px; font-weight:600; font-size:14px">{{ sopCta }} →</div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+        <div style="display:flex; justify-content:space-between; align-items:baseline">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Overall progress</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500; color:#0F766E">{{ overallPct }}%</div>
+        </div>
+        <div style="height:8px; background:#EDEBE6; border-radius:99px; margin-top:10px; overflow:hidden">
+          <div style="width:{{ overallPct }}%; height:100%; background:#0F766E; border-radius:99px"></div>
+        </div>
+        <div style="font-size:12px; color:#6B7370; margin-top:8px">{{ phaseSummary }} · target 30 Sep</div>
+      </div>
+      <div>
+        <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em; margin-bottom:8px">SUBCON</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+          <sc-for list="{{ subcons }}" as="g" hint-placeholder-count="4">
+            <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px; cursor:pointer" onClick="{{ g.go }}">
+              <div style="font-size:14px; font-weight:600; color:#1B1F1E">{{ g.name }}</div>
+              <div style="font-size:12px; color:#6B7370">{{ g.trade }} · {{ g.phases }} phases</div>
+              <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:8px"><div style="width:{{ g.pct }}%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <sc-if value="{{ hasLow }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#FBF3E4; border:1px solid #EBD9B4; border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:center; cursor:pointer" onClick="{{ goLowSupplies }}">
+          <div style="width:8px; height:8px; border-radius:50%; background:#B45309; flex-shrink:0"></div>
+          <div style="flex:1; font-size:13px; color:#7A4A08"><b>{{ lowCount }} supplies low</b> — {{ lowNames }}</div>
+          <div style="font-size:13px; font-weight:600; color:#B45309">View</div>
+        </div>
+      </sc-if>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:center; cursor:pointer" onClick="{{ goTransitSupplies }}">
+        <div style="width:8px; height:8px; border-radius:50%; background:#0F766E; flex-shrink:0"></div>
+        <div style="flex:1; font-size:13px; color:#1B1F1E"><b>Delivery tomorrow</b> — Laminate sheets · Seng Huat Trading</div>
+        <div style="font-size:13px; font-weight:600; color:#0F766E">Track</div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:center; cursor:pointer" onClick="{{ goDrawings }}">
+        <div style="width:28px; height:36px; border-radius:4px; background:#E4F0EC; border:1px solid #C6DED7; display:flex; align-items:center; justify-content:center; color:#0F766E; font-weight:700; font-size:9px; flex-shrink:0">PDF</div>
+        <div style="flex:1; font-size:13px; color:#1B1F1E"><b>Drawings</b> — 2 sets · Sales Gallery &amp; Lobby</div>
+        <div style="font-size:13px; font-weight:600; color:#0F766E">Open</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- PHASES -->
+  <sc-if value="{{ showPhases }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 20px 10px">
+      <div style="font-size:24px; font-weight:700; color:#1B1F1E">Phases</div>
+      <div style="display:flex; gap:8px; margin-top:12px; overflow-x:auto">
+        <sc-for list="{{ phaseChips }}" as="c" hint-placeholder-count="4">
+          <div style="background:{{ c.bg }}; color:{{ c.fg }}; border:1px solid {{ c.bd }}; border-radius:99px; padding:6px 14px; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer" onClick="{{ c.go }}">{{ c.label }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:4px 20px 16px; display:flex; flex-direction:column; gap:14px">
+      <sc-if value="{{ hasInProg }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#B45309; letter-spacing:0.05em; margin-bottom:8px">IN PROGRESS · {{ nInProg }}</div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <sc-for list="{{ phInProg }}" as="p" hint-placeholder-count="3">
+              <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                  <div style="font-size:15px; font-weight:600; color:#1B1F1E">{{ p.name }}</div>
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#0F766E">{{ p.pct }}%</div>
+                </div>
+                <div style="height:5px; background:#EDEBE6; border-radius:99px; margin:9px 0"><div style="width:{{ p.pct }}%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+                <div style="display:flex; gap:6px; align-items:center">
+                  <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">{{ p.subcon }}</div>
+                  <div style="flex:1; font-size:12px; color:{{ p.noteColor }}">{{ p.note }}</div>
+                  <div style="font-size:12px; font-weight:700; color:#0F766E; border:1px solid #C6DED7; border-radius:6px; padding:3px 9px; cursor:pointer" onClick="{{ p.bump }}">+5%</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasDone }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#0F766E; letter-spacing:0.05em; margin-bottom:8px">DONE · {{ nDone }}</div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <sc-for list="{{ phDone }}" as="p" hint-placeholder-count="2">
+              <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px">
+                <div style="font-size:14px; font-weight:500; color:#6B7370; text-decoration:line-through">{{ p.name }}</div>
+                <div style="color:#0F766E; font-size:15px">✓</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasTodo }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#6B7370; letter-spacing:0.05em; margin-bottom:8px">NOT STARTED · {{ nTodo }}</div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <sc-for list="{{ phTodo }}" as="p" hint-placeholder-count="3">
+              <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px">
+                <div style="font-size:14px; font-weight:500; color:#1B1F1E">{{ p.name }}</div>
+                <div style="display:flex; gap:6px; align-items:center">
+                  <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">{{ p.subcon }}</div>
+                  <div style="font-size:12px; font-weight:700; color:#0F766E; border:1px solid #C6DED7; border-radius:6px; padding:3px 9px; cursor:pointer" onClick="{{ p.start }}">Start</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- SUPPLIES -->
+  <sc-if value="{{ showSupplies }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 20px 10px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:24px; font-weight:700; color:#1B1F1E">Supplies</div>
+      </div>
+      <input placeholder="Search materials…" value="{{ query }}" onChange="{{ setQuery }}" style="width:100%; box-sizing:border-box; background:#fff; border:1px solid #E4E2DD; border-radius:10px; padding:10px 14px; margin-top:12px; font-size:14px; color:#1B1F1E" />
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <sc-for list="{{ supplyChips }}" as="c" hint-placeholder-count="3">
+          <div style="background:{{ c.bg }}; color:{{ c.fg }}; border:1px solid {{ c.bd }}; border-radius:99px; padding:5px 13px; font-size:13px; font-weight:600; cursor:pointer" onClick="{{ c.go }}">{{ c.label }}</div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:6px 20px 16px; display:flex; flex-direction:column; gap:8px">
+      <sc-for list="{{ supplyRows }}" as="s" hint-placeholder-count="5">
+        <div style="background:#fff; border:1.5px solid {{ s.border }}; border-radius:12px; padding:14px; cursor:pointer" onClick="{{ s.open }}">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+            <div style="font-size:15px; font-weight:600; color:#1B1F1E">{{ s.name }}</div>
+            <div style="font-size:11px; background:{{ s.badgeBg }}; color:{{ s.badgeFg }}; border-radius:5px; padding:3px 8px; font-weight:700; white-space:nowrap">{{ s.badge }}</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370; gap:8px">
+            <span>{{ s.loc }}</span><span style="font-family:'IBM Plex Mono',monospace; color:{{ s.qtyColor }}; font-weight:500">{{ s.qty }}</span>
+          </div>
+          <sc-if value="{{ s.hasBar }}" hint-placeholder-val="{{ true }}">
+            <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:7px"><div style="width:{{ s.pct }}%; height:100%; background:{{ s.barColor }}; border-radius:99px"></div></div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <!-- SUPPLY DETAIL -->
+  <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 20px 10px; display:flex; align-items:center; gap:12px">
+      <div style="font-size:22px; color:#0F766E; cursor:pointer; padding:0 6px" onClick="{{ backToSupplies }}">‹</div>
+      <div style="font-size:18px; font-weight:700; color:#1B1F1E">{{ d.name }}</div>
+    </div>
+    <div style="padding:4px 20px 16px; display:flex; flex-direction:column; gap:12px">
+      <div style="background:{{ d.heroBg }}; border:1px solid {{ d.heroBd }}; border-radius:16px; padding:16px">
+        <div style="display:flex; justify-content:space-between; align-items:baseline">
+          <div style="font-size:13px; font-weight:600; color:{{ d.heroFg }}">STOCK ON SITE</div>
+          <div style="font-size:11px; background:{{ d.badgeBg }}; color:#fff; border-radius:5px; padding:3px 8px; font-weight:700">{{ d.stockBadge }}</div>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:6px; margin-top:6px">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:36px; font-weight:500; color:#1B1F1E">{{ d.stock }}</div>
+          <div style="font-size:14px; color:#6B7370">/ {{ d.max }} {{ d.unit }} · min. {{ d.min }}</div>
+        </div>
+        <div style="height:8px; background:rgba(0,0,0,0.07); border-radius:99px; margin-top:10px"><div style="width:{{ d.pct }}%; height:100%; background:{{ d.barColor }}; border-radius:99px"></div></div>
+        <sc-if value="{{ d.runout }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:12px; color:#7A4A08; margin-top:8px">At current usage stock runs out in <b>{{ d.runout }}</b></div>
+        </sc-if>
+      </div>
+      <sc-if value="{{ d.canReorder }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#0F766E; color:#fff; border-radius:12px; text-align:center; padding:14px; font-weight:600; font-size:15px; cursor:pointer" onClick="{{ reorder }}">Reorder {{ d.reorderQty }} {{ d.unit }} — RM {{ d.reorderCost }}</div>
+      </sc-if>
+      <sc-if value="{{ d.ordered }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#E7EDF8; color:#1E40AF; border:1px solid #C7D4EE; border-radius:12px; text-align:center; padding:14px; font-weight:600; font-size:14px">✓ Order placed — ETA {{ d.eta }}</div>
+      </sc-if>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em">DETAILS</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; font-size:13px">
+          <div><div style="color:#6B7370; font-size:12px">Location</div><div style="font-weight:600; color:#1B1F1E">{{ d.loc }}</div></div>
+          <div><div style="color:#6B7370; font-size:12px">Unit cost</div><div style="font-weight:600; color:#1B1F1E">RM {{ d.cost }} / {{ d.unit }}</div></div>
+          <div><div style="color:#6B7370; font-size:12px">Used by</div><div style="font-weight:600; color:#1B1F1E">{{ d.usedBy }}</div></div>
+          <div><div style="color:#6B7370; font-size:12px">Spent to date</div><div style="font-weight:600; color:#1B1F1E">RM {{ d.spent }}</div></div>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em">SUPPLIER</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:8px">
+          <div>
+            <div style="font-size:14px; font-weight:600; color:#1B1F1E">{{ d.supplier }}</div>
+            <div style="font-size:12px; color:#6B7370">{{ d.supplierNote }}</div>
+          </div>
+          <div style="display:flex; gap:8px">
+            <div style="width:36px; height:36px; border-radius:50%; background:#E4F0EC; color:#0F766E; display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer" onClick="{{ callSupplier }}">✆</div>
+            <div style="width:36px; height:36px; border-radius:50%; background:#E4F0EC; color:#0F766E; display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer" onClick="{{ msgSupplier }}">✉</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em">MOVEMENT</div>
+        <div style="display:flex; flex-direction:column; margin-top:6px">
+          <sc-for list="{{ d.moves }}" as="m" hint-placeholder-count="3">
+            <div style="display:flex; gap:12px; padding:9px 0; border-bottom:1px solid #F0EEE9; font-size:13px">
+              <div style="color:#6B7370; width:52px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:12px">{{ m.date }}</div>
+              <div style="flex:1; color:#1B1F1E">{{ m.what }}</div>
+              <div style="color:{{ m.color }}; font-weight:600">{{ m.delta }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- DAILY REPORT -->
+  <sc-if value="{{ showReport }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 20px 10px">
+      <div style="font-size:24px; font-weight:700; color:#1B1F1E">Daily report</div>
+      <div style="font-size:13px; color:#6B7370; margin-top:2px">Tue 12 Aug · Faithview Gallery · {{ sopDone }} of 5 steps done</div>
+      <div style="display:flex; gap:4px; margin-top:10px">
+        <sc-for list="{{ sopSegs }}" as="seg" hint-placeholder-count="5">
+          <div style="flex:1; height:4px; border-radius:99px; background:{{ seg.color }}"></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:4px 20px 16px; display:flex; flex-direction:column; gap:12px">
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">1 · Site photos <span style="color:#6B7370; font-weight:400">(min. 3)</span></div>
+          <div style="color:{{ photoStatColor }}; font-weight:700; font-size:13px">{{ photoStat }}</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+          <sc-for list="{{ photoTiles }}" as="ph" hint-placeholder-count="2">
+            <div style="width:62px; height:62px; border-radius:8px; background:{{ ph.bg }}"></div>
+          </sc-for>
+          <div style="width:62px; height:62px; border-radius:8px; border:1.5px dashed #C9C4BA; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:22px; cursor:pointer" onClick="{{ addPhoto }}">+</div>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">2 · Manpower on site</div>
+          <div style="color:{{ manStatColor }}; font-weight:700; font-size:13px">{{ manStat }}</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px">
+          <sc-for list="{{ manRows }}" as="m" hint-placeholder-count="4">
+            <div style="background:#F6F5F3; border-radius:8px; padding:8px 10px; display:flex; align-items:center; justify-content:space-between; gap:6px">
+              <div style="font-size:12px; color:#1B1F1E; min-width:0">{{ m.name }}</div>
+              <div style="display:flex; align-items:center; gap:6px">
+                <div style="width:24px; height:24px; border-radius:6px; background:#fff; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#6B7370; font-weight:600" onClick="{{ m.dec }}">−</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500; width:16px; text-align:center">{{ m.count }}</div>
+                <div style="width:24px; height:24px; border-radius:6px; background:#fff; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F766E; font-weight:600" onClick="{{ m.inc }}">+</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">3 · Material used today</div>
+          <div style="color:{{ matStatColor }}; font-weight:700; font-size:13px">{{ matStat }}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px">
+          <sc-for list="{{ matRows }}" as="r" hint-placeholder-count="2">
+            <div style="display:flex; gap:8px; align-items:center">
+              <div style="flex:1; background:#F6F5F3; border-radius:8px; padding:9px 12px; font-size:13px; color:#1B1F1E; min-width:0">{{ r.name }}</div>
+              <div style="display:flex; align-items:center; gap:6px">
+                <div style="width:26px; height:26px; border-radius:6px; background:#F6F5F3; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#6B7370; font-weight:600" onClick="{{ r.dec }}">−</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; width:52px; text-align:center">{{ r.qty }} {{ r.unit }}</div>
+                <div style="width:26px; height:26px; border-radius:6px; background:#F6F5F3; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F766E; font-weight:600" onClick="{{ r.inc }}">+</div>
+              </div>
+              <div style="color:#B3261E; font-size:16px; cursor:pointer; padding:0 2px" onClick="{{ r.remove }}">×</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ canAddMat }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:13px; font-weight:600; color:#0F766E; padding:2px; cursor:pointer" onClick="{{ addMaterial }}">+ Add material</div>
+          </sc-if>
+        </div>
+        <div style="font-size:12px; color:#6B7370; margin-top:8px; background:#F6F5F3; border-radius:8px; padding:8px 10px">Stock levels update automatically when you submit</div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">4 · Work done summary</div>
+          <div style="color:{{ sumStatColor }}; font-weight:700; font-size:13px">{{ sumStat }}</div>
+        </div>
+        <textarea placeholder="What was completed today…" value="{{ draftSummary }}" onChange="{{ setSummary }}" style="width:100%; box-sizing:border-box; margin-top:10px; background:#F6F5F3; border:none; border-radius:8px; padding:10px 12px; font-size:13px; min-height:64px; resize:vertical; color:#1B1F1E"></textarea>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="font-size:14px; font-weight:600; color:#1B1F1E">5 · Issues / blockers <span style="color:#6B7370; font-weight:400">(optional)</span></div>
+        <textarea placeholder="Any delays, damage, or blockers…" value="{{ draftIssues }}" onChange="{{ setIssues }}" style="width:100%; box-sizing:border-box; margin-top:10px; background:#F6F5F3; border:none; border-radius:8px; padding:10px 12px; font-size:13px; min-height:48px; resize:vertical; color:#1B1F1E"></textarea>
+      </div>
+      <div style="background:{{ submitBg }}; color:{{ submitFg }}; border-radius:12px; text-align:center; padding:14px; font-weight:600; font-size:15px; cursor:pointer" onClick="{{ submitReport }}">{{ submitLabel }}</div>
+    </div>
+  </sc-if>
+
+  <!-- HISTORY -->
+  <sc-if value="{{ showHistory }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 20px 10px">
+      <div style="font-size:24px; font-weight:700; color:#1B1F1E">History</div>
+    </div>
+    <div style="padding:4px 20px 16px; display:flex; flex-direction:column; gap:12px">
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+          <div style="font-size:15px; font-weight:600; color:#1B1F1E">August 2026</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; font-size:12px; color:#9AA09C; margin-bottom:6px">
+          <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; font-size:13px; color:#1B1F1E">
+          <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="28">
+            <div style="padding:7px 0; background:{{ c.bg }}; border-radius:8px; font-weight:{{ c.w }}; color:{{ c.fg }}">{{ c.day }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex; gap:14px; margin-top:12px; font-size:11px; color:#6B7370">
+          <div style="display:flex; align-items:center; gap:5px"><div style="width:8px; height:8px; border-radius:2px; background:#E4F0EC; border:1px solid #0F766E"></div>Complete</div>
+          <div style="display:flex; align-items:center; gap:5px"><div style="width:8px; height:8px; border-radius:2px; background:#FBF3E4; border:1px solid #B45309"></div>Incomplete</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <sc-for list="{{ reportCards }}" as="r" hint-placeholder-count="3">
+          <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+              <div style="font-size:14px; font-weight:600; color:#1B1F1E">{{ r.date }}</div>
+              <div style="font-size:11px; background:{{ r.badgeBg }}; color:{{ r.badgeFg }}; border-radius:5px; padding:3px 8px; font-weight:700">{{ r.badge }}</div>
+            </div>
+            <div style="font-size:12px; color:#6B7370; margin-top:6px">{{ r.meta }}</div>
+            <div style="display:flex; gap:14px; margin-top:10px; font-size:13px; font-weight:600; color:#0F766E">
+              <div style="cursor:pointer" onClick="{{ r.view }}">View report</div><div style="cursor:pointer" onClick="{{ r.share }}">Share PDF ↗</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- DRAWINGS -->
+  <sc-if value="{{ showDrawings }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 20px 10px; display:flex; align-items:center; gap:12px">
+      <div style="font-size:22px; color:#0F766E; cursor:pointer; padding:0 6px" onClick="{{ goHome }}">‹</div>
+      <div>
+        <div style="font-size:18px; font-weight:700; color:#1B1F1E">Drawings</div>
+        <div style="font-size:12px; color:#6B7370">Faithview Gallery · 2 drawing sets</div>
+      </div>
+    </div>
+    <div style="padding:8px 20px 16px; display:flex; flex-direction:column; gap:12px">
+      <sc-for list="{{ drawingSets }}" as="ds" hint-placeholder-count="2">
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+          <div style="display:flex; gap:12px; align-items:flex-start">
+            <div style="width:44px; height:56px; border-radius:6px; background:#E4F0EC; border:1px solid #C6DED7; display:flex; align-items:center; justify-content:center; color:#0F766E; font-weight:700; font-size:11px; flex-shrink:0">PDF</div>
+            <div style="flex:1; min-width:0">
+              <div style="font-size:15px; font-weight:600; color:#1B1F1E">{{ ds.name }}</div>
+              <div style="font-size:12px; color:#6B7370; margin-top:2px">{{ ds.pages }} pages · Rev. 31 Jul 2026</div>
+              <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap">
+                <sc-for list="{{ ds.tags }}" as="t" hint-placeholder-count="2">
+                  <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">{{ t.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; color:#0F766E">
+            <div style="cursor:pointer" onClick="{{ ds.open }}">Open</div><div style="cursor:pointer" onClick="{{ ds.share }}">Share ↗</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="border:1.5px dashed #C9C4BA; border-radius:16px; padding:18px; text-align:center; color:#6B7370; font-size:13px; cursor:pointer" onClick="{{ uploadDrawing }}">
+        <span style="color:#0F766E; font-weight:600">+ Upload drawing</span> — PDF, image or photo of a sketch
+      </div>
+    </div>
+  </sc-if>
+
+  </div>
+
+  <!-- TAB BAR -->
+  <div style="display:flex; border-top:1px solid #E4E2DD; background:#FCFBF9; padding:10px 8px 22px; flex-shrink:0">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+      <div style="flex:1; text-align:center; color:{{ t.color }}; cursor:pointer" onClick="{{ t.go }}">
+        <div style="font-size:18px">{{ t.icon }}</div><div style="font-size:10px; font-weight:600">{{ t.label }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- TOAST -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; bottom:92px; left:20px; right:20px; background:#1B1F1E; color:#fff; border-radius:12px; padding:12px 16px; font-size:13px; font-weight:500; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.25); z-index:99">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 430, &quot;height&quot;: 900}}">
+class Component extends DCLogic {
+  state = {
+    tab: 'home', detailId: null, drawings: false, toast: '',
+    query: '', supplyFilter: 'all', phaseFilter: 'All',
+    supplies: [
+      { id: 1, name: 'Plywood 18mm', unit: 'pcs', stock: 6, max: 40, min: 10, loc: 'On site · Store room B', locShort: 'Store room B', supplier: 'Seng Huat Trading Sdn Bhd', supplierNote: 'Lead time 2–3 days · last order 28 Jul', cost: 78, usedBy: 'Classic Home', spent: 2652, status: 'stock', ordered: false, reorderQty: 30, runout: '~1.5 days', moves: [{ date: '12 Aug', what: 'Used — Backdrop 01 cladding', delta: -4 }, { date: '11 Aug', what: 'Used — Backdrop 01 framing', delta: -5 }, { date: '28 Jul', what: 'Delivered — PO #1042', delta: 40 }] },
+      { id: 2, name: 'LED strip 4000K', unit: 'm', stock: 8, max: 60, min: 12, loc: 'On site · with Ah Kang', locShort: 'With Ah Kang', supplier: 'LiteWorks Electrical', supplierNote: 'Lead time 3–4 days · last order 20 Jul', cost: 12, usedBy: 'Ah Kang', spent: 624, status: 'stock', ordered: false, reorderQty: 50, runout: '~2 days', moves: [{ date: '11 Aug', what: 'Used — Backdrop 01 cove light', delta: -10 }, { date: '20 Jul', what: 'Delivered — PO #1038', delta: 60 }] },
+      { id: 3, name: 'Laminate sheets — Walnut', unit: 'pcs', stock: 0, max: 25, min: 5, loc: 'In transit · Seng Huat Trading', locShort: 'In transit', supplier: 'Seng Huat Trading Sdn Bhd', supplierNote: 'Lead time 2–3 days · ordered 10 Aug', cost: 145, usedBy: 'Fanmuli 定制', spent: 0, status: 'transit', eta: '13 Aug', ordered: true, reorderQty: 0, moves: [{ date: '10 Aug', what: 'Ordered — PO #1051 (25 pcs)', delta: 0 }] },
+      { id: 4, name: 'Tempered glass panels', unit: 'panels', stock: 0, max: 4, min: 1, loc: 'Fabricating · Hock Heng workshop', locShort: 'Hock Heng workshop', supplier: 'Hock Heng Glass', supplierNote: 'Fabrication 5–7 days · measured 8 Aug', cost: 680, usedBy: 'Hock Heng', spent: 0, status: 'transit', eta: '15 Aug', ordered: true, reorderQty: 0, moves: [{ date: '8 Aug', what: 'Measurement confirmed on site', delta: 0 }] },
+      { id: 5, name: 'Wiring — 2.5mm² cable', unit: 'm', stock: 180, max: 300, min: 50, loc: 'On site · Store room A', locShort: 'Store room A', supplier: 'LiteWorks Electrical', supplierNote: 'Lead time 3–4 days · last order 15 Jul', cost: 3, usedBy: 'Ah Kang', spent: 360, status: 'stock', ordered: false, reorderQty: 200, moves: [{ date: '11 Aug', what: 'Used — Pantry first fix', delta: -35 }, { date: '15 Jul', what: 'Delivered — PO #1030', delta: 300 }] },
+      { id: 6, name: 'Paint — Nippon Matt White', unit: 'L', stock: 14, max: 20, min: 5, loc: 'On site · Store room A', locShort: 'Store room A', supplier: 'Colour Trade Hardware', supplierNote: 'Lead time 1–2 days · last order 30 Jul', cost: 32, usedBy: 'Classic Home', spent: 192, status: 'stock', ordered: false, reorderQty: 10, moves: [{ date: '10 Aug', what: 'Used — Backdrop base coat', delta: -6 }, { date: '30 Jul', what: 'Delivered — PO #1045', delta: 20 }] },
+    ],
+    phases: [
+      { id: 1, name: 'Faithview Meeting — Pre-condition check', subcon: 'Classic Home', status: 'done' },
+      { id: 2, name: 'Material Prep', subcon: 'Classic Home', status: 'done' },
+      { id: 3, name: 'Site Meeting with Sub-con', subcon: 'Classic Home', status: 'done' },
+      { id: 4, name: 'Backdrop 01', subcon: 'Classic Home', status: 'prog', pct: 75, note: 'Due 18 Aug · photo logged today', noteColor: '#6B7370' },
+      { id: 5, name: 'Reception Counter 01', subcon: 'Fanmuli 定制', status: 'prog', pct: 50, note: 'Blocked · waiting laminate', noteColor: '#B3261E' },
+      { id: 6, name: 'Pantry', subcon: 'Ah Kang', status: 'prog', pct: 30, note: 'Wiring first fix · due 22 Aug', noteColor: '#6B7370' },
+      { id: 7, name: 'Toilet Glass (M & F)', subcon: 'Hock Heng', status: 'prog', pct: 20, note: 'Measurement done · fabricating', noteColor: '#6B7370' },
+      { id: 8, name: 'Backdrop 02', subcon: 'Classic Home', status: 'todo' },
+      { id: 9, name: 'Backdrop 03', subcon: 'Classic Home', status: 'todo' },
+      { id: 10, name: 'Backdrop 04', subcon: 'Classic Home', status: 'todo' },
+      { id: 11, name: 'Reception Counter 02', subcon: 'Fanmuli 定制', status: 'todo' },
+      { id: 12, name: 'Model House', subcon: 'Fanmuli 定制', status: 'todo' },
+      { id: 13, name: 'Sitting Area 01', subcon: 'Fanmuli 定制', status: 'todo' },
+      { id: 14, name: 'Sitting Area 02', subcon: 'Ah Kang', status: 'todo' },
+      { id: 15, name: 'Type Unit Signage A/B', subcon: 'Hock Heng', status: 'todo' },
+      { id: 16, name: 'Advertising Board', subcon: 'Hock Heng', status: 'todo' },
+    ],
+    reports: [
+      { date: 'Mon 11 Aug', complete: false, badge: 'NO MATERIAL LOG', meta: '3 photos · 8 workers · Backdrop 01 framing, wiring first fix at Pantry' },
+      { date: 'Sun 10 Aug', complete: true, badge: 'COMPLETE', meta: '5 photos · 9 workers · Reception Counter 01 carcass done, laminate pending' },
+      { date: 'Thu 7 Aug', complete: true, badge: 'COMPLETE', meta: '4 photos · 7 workers · Backdrop 01 cladding started' },
+    ],
+    draft: { photos: 0, man: { 'Classic Home': 0, 'Fanmuli 定制': 0, 'Ah Kang': 0, 'Hock Heng': 0 }, mats: [], summary: '', issues: '', submittedToday: false },
+  };
+  showToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+  go(tab) { this.setState({ tab, detailId: null, drawings: false }); }
+  renderVals() {
+    const S = this.state, go = this.go.bind(this), toast = this.showToast.bind(this);
+    const setD = (patch) => this.setState({ draft: { ...S.draft, ...patch } });
+    const trades = { 'Classic Home': 'Carpentry', 'Fanmuli 定制': 'Custom joinery', 'Ah Kang': 'Electrical', 'Hock Heng': 'Glass & signage' };
+    const detail = S.detailId ? S.supplies.find(s => s.id === S.detailId) : null;
+    const showTab = (t) => S.tab === t && !S.detailId && !S.drawings;
+    // SOP
+    const dr = S.draft;
+    const manTotal = Object.values(dr.man).reduce((a, b) => a + b, 0);
+    const steps = [
+      { label: 'Photos', done: dr.photos >= 3 },
+      { label: 'Manpower', done: manTotal > 0 },
+      { label: 'Materials', done: dr.mats.length > 0 },
+      { label: 'Summary', done: dr.summary.trim().length > 0 },
+      { label: 'Issues', done: dr.issues.trim().length > 0 },
+    ];
+    const sopDone = dr.submittedToday ? 5 : steps.filter(s => s.done).length;
+    const requiredOk = steps.slice(0, 4).every(s => s.done);
+    // phases
+    const inProg = S.phases.filter(p => p.status === 'prog');
+    const done = S.phases.filter(p => p.status === 'done');
+    const overallPct = Math.round(S.phases.reduce((a, p) => a + (p.status === 'done' ? 100 : p.status === 'prog' ? p.pct : 0), 0) / S.phases.length);
+    const pf = S.phaseFilter;
+    const fBy = (l) => pf === 'All' ? l : l.filter(p => p.subcon === pf);
+    const phInProg = fBy(inProg).map(p => ({
+      ...p,
+      bump: () => { this.setState({ phases: S.phases.map(q => q.id === p.id ? (q.pct >= 95 ? { ...q, status: 'done' } : { ...q, pct: q.pct + 5 }) : q) }); if (p.pct >= 95) toast(p.name + ' marked done 🎉'); },
+    }));
+    const phDone = fBy(done);
+    const phTodo = fBy(S.phases.filter(p => p.status === 'todo')).map(p => ({
+      ...p,
+      start: () => { this.setState({ phases: S.phases.map(q => q.id === p.id ? { ...q, status: 'prog', pct: 5, note: 'Started today', noteColor: '#6B7370' } : q) }); toast(p.name + ' started'); },
+    }));
+    const chipNames = ['All', 'Classic Home', 'Fanmuli 定制', 'Ah Kang', 'Hock Heng'];
+    const phaseChips = chipNames.map(n => ({
+      label: n === 'All' ? 'All ' + S.phases.length : n,
+      bg: pf === n ? '#0F766E' : '#fff', fg: pf === n ? '#fff' : '#1B1F1E', bd: pf === n ? '#0F766E' : '#E4E2DD',
+      go: () => this.setState({ phaseFilter: n }),
+    }));
+    // subcon cards
+    const subcons = Object.keys(trades).map(name => {
+      const ps = S.phases.filter(p => p.subcon === name);
+      const pct = Math.round(ps.reduce((a, p) => a + (p.status === 'done' ? 100 : p.status === 'prog' ? p.pct : 0), 0) / Math.max(ps.length, 1));
+      return { name, trade: trades[name], phases: ps.length, pct, go: () => { this.setState({ tab: 'phases', phaseFilter: name, detailId: null, drawings: false }); } };
+    });
+    // supplies
+    const low = S.supplies.filter(s => s.status === 'stock' && s.stock <= s.min && !s.ordered);
+    const sf = S.supplyFilter, q = S.query.toLowerCase();
+    let rows = S.supplies.filter(s => s.name.toLowerCase().includes(q));
+    if (sf === 'low') rows = rows.filter(s => s.status === 'stock' && s.stock <= s.min);
+    if (sf === 'transit') rows = rows.filter(s => s.status === 'transit');
+    const supplyRows = rows.map(s => {
+      const isLow = s.status === 'stock' && s.stock <= s.min;
+      const pct = Math.round(s.stock / s.max * 100);
+      return {
+        name: s.name, loc: s.loc,
+        border: isLow && !s.ordered ? '#EBD9B4' : '#E4E2DD',
+        badge: s.status === 'transit' ? 'ARRIVES ' + s.eta.toUpperCase() : s.ordered ? 'ORDERED' : isLow ? 'LOW — REORDER' : 'OK',
+        badgeBg: s.status === 'transit' || s.ordered ? '#E7EDF8' : isLow ? '#FBF3E4' : '#E4F0EC',
+        badgeFg: s.status === 'transit' || s.ordered ? '#1E40AF' : isLow ? '#B45309' : '#0F766E',
+        qty: s.status === 'transit' ? s.max + ' ' + s.unit + ' ordered' : s.stock + ' / ' + s.max + ' ' + s.unit,
+        qtyColor: isLow ? '#B45309' : '#0F766E',
+        hasBar: s.status === 'stock', pct, barColor: isLow ? '#B45309' : '#0F766E',
+        open: () => this.setState({ detailId: s.id }),
+      };
+    });
+    const supplyChips = [
+      { key: 'all', label: 'All' },
+      { key: 'low', label: 'Low stock · ' + S.supplies.filter(s => s.status === 'stock' && s.stock <= s.min).length },
+      { key: 'transit', label: 'In transit · ' + S.supplies.filter(s => s.status === 'transit').length },
+    ].map(c => ({
+      label: c.label,
+      bg: sf === c.key ? '#0F766E' : c.key === 'low' ? '#FBF3E4' : '#fff',
+      fg: sf === c.key ? '#fff' : c.key === 'low' ? '#B45309' : '#1B1F1E',
+      bd: sf === c.key ? '#0F766E' : c.key === 'low' ? '#EBD9B4' : '#E4E2DD',
+      go: () => this.setState({ supplyFilter: c.key }),
+    }));
+    // detail
+    let d = {};
+    if (detail) {
+      const isLow = detail.status === 'stock' && detail.stock <= detail.min;
+      d = {
+        ...detail,
+        pct: Math.max(Math.round(detail.stock / detail.max * 100), 2),
+        heroBg: isLow ? '#FBF3E4' : '#fff', heroBd: isLow ? '#EBD9B4' : '#E4E2DD', heroFg: isLow ? '#7A4A08' : '#6B7370',
+        badgeBg: isLow ? '#B45309' : detail.status === 'transit' ? '#1E40AF' : '#0F766E',
+        stockBadge: detail.status === 'transit' ? 'IN TRANSIT' : isLow ? 'BELOW MINIMUM' : 'HEALTHY',
+        barColor: isLow ? '#B45309' : '#0F766E',
+        runout: isLow && !detail.ordered ? detail.runout : '',
+        canReorder: isLow && !detail.ordered,
+        ordered: detail.ordered, eta: detail.eta || '14 Aug',
+        reorderCost: (detail.reorderQty * detail.cost).toLocaleString(),
+        spent: detail.spent.toLocaleString(),
+        moves: detail.moves.map(m => ({ ...m, delta: m.delta > 0 ? '+' + m.delta : m.delta === 0 ? '—' : String(m.delta), color: m.delta > 0 ? '#0F766E' : m.delta === 0 ? '#6B7370' : '#B3261E' })),
+      };
+    }
+    // report form
+    const grads = ['linear-gradient(135deg,#C9C4BA,#A8A296)', 'linear-gradient(135deg,#B9B4A8,#98928A)', 'linear-gradient(135deg,#CFCABF,#ABA79C)', 'linear-gradient(135deg,#C2BDB2,#9E988E)', 'linear-gradient(135deg,#BDB8AC,#9A948A)', 'linear-gradient(135deg,#D2CDC2,#AEA89E)'];
+    const photoTiles = Array.from({ length: dr.photos }, (_, i) => ({ bg: grads[i % 6] }));
+    const manRows = Object.keys(dr.man).map(name => ({
+      name, count: dr.man[name],
+      inc: () => setD({ man: { ...dr.man, [name]: dr.man[name] + 1 } }),
+      dec: () => setD({ man: { ...dr.man, [name]: Math.max(0, dr.man[name] - 1) } }),
+    }));
+    const stockSupplies = S.supplies.filter(s => s.status === 'stock');
+    const matRows = dr.mats.map((r, i) => {
+      const sup = S.supplies.find(s => s.id === r.id);
+      const step = sup.unit === 'm' ? 5 : 1;
+      return {
+        name: sup.name, qty: r.qty, unit: sup.unit,
+        inc: () => setD({ mats: dr.mats.map((x, j) => j === i ? { ...x, qty: Math.min(x.qty + step, sup.stock) } : x) }),
+        dec: () => setD({ mats: dr.mats.map((x, j) => j === i ? { ...x, qty: Math.max(step, x.qty - step) } : x) }),
+        remove: () => setD({ mats: dr.mats.filter((_, j) => j !== i) }),
+      };
+    });
+    const nextMat = stockSupplies.find(s => !dr.mats.some(m => m.id === s.id) && s.stock > 0);
+    const stat = (ok, doneTxt, todoTxt) => ok ? [doneTxt, '#0F766E'] : [todoTxt, '#B45309'];
+    const [photoStat, photoStatColor] = stat(steps[0].done, '✓ ' + dr.photos + ' added', dr.photos + ' of 3');
+    const [manStat, manStatColor] = stat(steps[1].done, '✓ ' + manTotal + ' on site', 'Required');
+    const [matStat, matStatColor] = stat(steps[2].done, '✓ ' + dr.mats.length + ' logged', 'Required');
+    const [sumStat, sumStatColor] = stat(steps[3].done, '✓', 'Required');
+    const leftCount = 4 - steps.slice(0, 4).filter(s => s.done).length;
+    const submitReport = () => {
+      if (dr.submittedToday) { toast('Today\u2019s report already submitted'); return; }
+      if (!requiredOk) { toast(leftCount + ' required step' + (leftCount > 1 ? 's' : '') + ' left'); return; }
+      const supplies = S.supplies.map(s => {
+        const used = dr.mats.find(m => m.id === s.id);
+        return used ? { ...s, stock: Math.max(0, s.stock - used.qty), spent: s.spent + used.qty * s.cost, moves: [{ date: '12 Aug', what: 'Used — daily report', delta: -used.qty }, ...s.moves] } : s;
+      });
+      const reports = [{ date: 'Tue 12 Aug', complete: true, badge: 'COMPLETE', meta: dr.photos + ' photos · ' + manTotal + ' workers · ' + dr.summary.trim() }, ...S.reports];
+      this.setState({ supplies, reports, tab: 'history', draft: { ...dr, submittedToday: true } });
+      this.showToast('Report submitted · stock updated');
+    };
+    // history
+    const todaySubmitted = dr.submittedToday;
+    const calCells = [
+      { day: 27, off: 1 }, { day: 28, off: 1 }, { day: 29, off: 1 }, { day: 30, off: 1 }, { day: 31, off: 1 }, { day: 1 }, { day: 2, wk: 1 },
+      { day: 3, ok: 1 }, { day: 4, ok: 1 }, { day: 5, ok: 1 }, { day: 6, ok: 1 }, { day: 7, ok: 1 }, { day: 8 }, { day: 9, wk: 1 },
+      { day: 10, ok: 1 }, { day: 11, warn: 1 }, { day: 12, today: 1 }, { day: 13 }, { day: 14 }, { day: 15 }, { day: 16, wk: 1 },
+      { day: 17 }, { day: 18 }, { day: 19 }, { day: 20 }, { day: 21 }, { day: 22 }, { day: 23, wk: 1 },
+    ].map(c => ({
+      day: c.day,
+      bg: c.today ? (todaySubmitted ? '#0F766E' : '#1B1F1E') : c.ok ? '#E4F0EC' : c.warn ? '#FBF3E4' : 'transparent',
+      fg: c.today ? '#fff' : c.ok ? '#0F766E' : c.warn ? '#B45309' : c.off ? '#D8D5CE' : c.wk ? '#9AA09C' : '#1B1F1E',
+      w: c.today ? 700 : (c.ok || c.warn) ? 600 : 400,
+    }));
+    const reportCards = S.reports.map(r => ({
+      ...r,
+      badgeBg: r.complete ? '#E4F0EC' : '#FBF3E4', badgeFg: r.complete ? '#0F766E' : '#B45309',
+      view: () => toast('Opens full report — ' + r.date), share: () => toast('PDF shared to WhatsApp'),
+    }));
+    const tabs = [
+      { key: 'home', icon: '⌂', label: 'Home' }, { key: 'phases', icon: '▤', label: 'Phases' },
+      { key: 'supplies', icon: '▦', label: 'Supplies' }, { key: 'report', icon: '✎', label: 'Report' },
+      { key: 'history', icon: '▭', label: 'History' },
+    ].map(t => ({ ...t, color: showTab(t.key) ? '#0F766E' : '#9AA09C', go: () => go(t.key) }));
+    return {
+      showHome: showTab('home'), showPhases: showTab('phases'), showSupplies: showTab('supplies'),
+      showReport: showTab('report'), showHistory: showTab('history'),
+      showDetail: !!detail, showDrawings: S.drawings,
+      toast: S.toast, tabs,
+      sopSteps: steps.map(s => ({ label: s.label, mark: (dr.submittedToday || s.done) ? '✓' : '·' })).slice(0, 4),
+      sopDone, sopCta: dr.submittedToday ? 'View today\u2019s report' : sopDone > 0 ? 'Continue daily report' : 'Start daily report',
+      sopSegs: steps.map(s => ({ color: (dr.submittedToday || s.done) ? '#0F766E' : '#D8D5CE' })),
+      overallPct, phaseSummary: inProg.length + ' in progress · ' + done.length + ' of ' + S.phases.length + ' done',
+      subcons, hasLow: low.length > 0, lowCount: low.length, lowNames: low.map(s => s.name.split(' —')[0]).join(', '),
+      goReport: () => go('report'), goHome: () => go('home'),
+      goLowSupplies: () => this.setState({ tab: 'supplies', supplyFilter: 'low', detailId: null, drawings: false }),
+      goTransitSupplies: () => this.setState({ tab: 'supplies', supplyFilter: 'transit', detailId: null, drawings: false }),
+      goDrawings: () => this.setState({ drawings: true, detailId: null }),
+      phaseChips, phInProg, phDone, phTodo,
+      hasInProg: phInProg.length > 0, hasDone: phDone.length > 0, hasTodo: phTodo.length > 0,
+      nInProg: phInProg.length, nDone: phDone.length, nTodo: phTodo.length,
+      query: S.query, setQuery: (e) => this.setState({ query: e.target.value }),
+      supplyChips, supplyRows, d,
+      backToSupplies: () => this.setState({ detailId: null, tab: 'supplies' }),
+      reorder: () => { this.setState({ supplies: S.supplies.map(s => s.id === detail.id ? { ...s, ordered: true, eta: '15 Aug', moves: [{ date: '12 Aug', what: 'Ordered — PO #1052 (' + s.reorderQty + ' ' + s.unit + ')', delta: 0 }, ...s.moves] } : s) }); toast('Order sent to ' + detail.supplier); },
+      callSupplier: () => toast('Calling ' + (detail ? detail.supplier : '') + '…'),
+      msgSupplier: () => toast('Opens WhatsApp chat'),
+      photoTiles, addPhoto: () => { if (dr.photos < 6) setD({ photos: dr.photos + 1 }); toast(dr.photos < 6 ? 'Photo added from camera' : 'Max 6 photos'); },
+      photoStat, photoStatColor, manRows, manStat, manStatColor,
+      matRows, matStat, matStatColor, canAddMat: !!nextMat,
+      addMaterial: () => { if (nextMat) setD({ mats: [...dr.mats, { id: nextMat.id, qty: nextMat.unit === 'm' ? 5 : 1 }] }); },
+      draftSummary: dr.summary, setSummary: (e) => setD({ summary: e.target.value }),
+      draftIssues: dr.issues, setIssues: (e) => setD({ issues: e.target.value }),
+      sumStat, sumStatColor,
+      submitBg: dr.submittedToday ? '#E4F0EC' : requiredOk ? '#0F766E' : '#D8D5CE',
+      submitFg: dr.submittedToday ? '#0F766E' : requiredOk ? '#fff' : '#8B897F',
+      submitLabel: dr.submittedToday ? '✓ Submitted — Tue 12 Aug' : requiredOk ? 'Submit report' : 'Submit report — ' + leftCount + ' step' + (leftCount > 1 ? 's' : '') + ' left',
+      submitReport, calCells, reportCards,
+      drawingSets: [
+        { name: 'LOT 26662 — Sales Gallery', pages: 10, tags: [{ label: 'Backdrop 01–04' }, { label: 'Model House' }, { label: 'Pantry' }], open: () => toast('Opens PDF viewer — 10 pages'), share: () => toast('PDF shared to WhatsApp') },
+        { name: 'LOT 26662 — Sales Gallery (Lobby)', pages: 13, tags: [{ label: 'Reception Counter 01–02' }, { label: 'Sitting Area 01–02' }], open: () => toast('Opens PDF viewer — 13 pages'), share: () => toast('PDF shared to WhatsApp') },
+      ],
+      uploadDrawing: () => toast('Opens file picker'),
+    };
+  }
+}
+</script>
+</body>
+</html>

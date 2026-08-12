@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; background:#ECEAE5; font-family:'IBM Plex Sans',sans-serif; }
+a { color:#0F766E; } a:hover { color:#0B5A54; }
+</style>
+</helmet>
+<section style="padding:48px; display:flex; gap:40px; flex-wrap:wrap; align-items:flex-start">
+
+<!-- ═══ 1 · HOME ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">1 · Home</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 14px; display:flex; align-items:center; justify-content:space-between">
+    <div>
+      <div style="font-size:12px; color:#6B7370; font-weight:500">PROJECT</div>
+      <div style="display:flex; align-items:center; gap:6px; font-size:21px; font-weight:700; color:#1B1F1E">Faithview Gallery <span style="font-size:12px; color:#0F766E">▼</span></div>
+    </div>
+    <div style="width:40px; height:40px; border-radius:50%; background:#0F766E; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px">SV</div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:0 20px 12px; display:flex; flex-direction:column; gap:14px">
+    <div style="background:#0F766E; border-radius:16px; padding:16px; color:#fff">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:13px; font-weight:600; opacity:0.85">TODAY'S SOP · TUE 12 AUG</div>
+        <div style="font-size:12px; background:rgba(255,255,255,0.18); border-radius:99px; padding:3px 10px; font-weight:600">2 of 5 done</div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px">
+        <div style="flex:1; background:rgba(255,255,255,0.14); border-radius:10px; padding:10px 8px; text-align:center">
+          <div style="font-size:17px">✓</div><div style="font-size:11px; margin-top:2px; opacity:0.9">Site photos</div>
+        </div>
+        <div style="flex:1; background:rgba(255,255,255,0.14); border-radius:10px; padding:10px 8px; text-align:center">
+          <div style="font-size:17px">✓</div><div style="font-size:11px; margin-top:2px; opacity:0.9">Manpower</div>
+        </div>
+        <div style="flex:1; background:rgba(255,255,255,0.14); border-radius:10px; padding:10px 8px; text-align:center; outline:1.5px dashed rgba(255,255,255,0.5); outline-offset:-1.5px">
+          <div style="font-size:17px; opacity:0.6">·</div><div style="font-size:11px; margin-top:2px; opacity:0.9">Materials</div>
+        </div>
+        <div style="flex:1; background:rgba(255,255,255,0.14); border-radius:10px; padding:10px 8px; text-align:center; outline:1.5px dashed rgba(255,255,255,0.5); outline-offset:-1.5px">
+          <div style="font-size:17px; opacity:0.6">·</div><div style="font-size:11px; margin-top:2px; opacity:0.9">Summary</div>
+        </div>
+      </div>
+      <div style="margin-top:12px; background:#fff; color:#0F766E; border-radius:10px; text-align:center; padding:11px; font-weight:600; font-size:14px">Continue daily report →</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+      <div style="display:flex; justify-content:space-between; align-items:baseline">
+        <div style="font-size:14px; font-weight:600; color:#1B1F1E">Overall progress</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:500; color:#0F766E">42%</div>
+      </div>
+      <div style="height:8px; background:#EDEBE6; border-radius:99px; margin-top:10px; overflow:hidden">
+        <div style="width:42%; height:100%; background:#0F766E; border-radius:99px"></div>
+      </div>
+      <div style="font-size:12px; color:#6B7370; margin-top:8px">7 of 16 phases in progress · target 30 Sep</div>
+    </div>
+    <div>
+      <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em; margin-bottom:8px">SUBCON</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Classic Home</div>
+          <div style="font-size:12px; color:#6B7370">Carpentry · 5 phases</div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:8px"><div style="width:60%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Fanmuli 定制</div>
+          <div style="font-size:12px; color:#6B7370">Custom joinery · 4 phases</div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:8px"><div style="width:35%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Ah Kang</div>
+          <div style="font-size:12px; color:#6B7370">Electrical · 3 phases</div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:8px"><div style="width:48%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Hock Heng</div>
+          <div style="font-size:12px; color:#6B7370">Glass &amp; signage · 4 phases</div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:8px"><div style="width:20%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#FBF3E4; border:1px solid #EBD9B4; border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:center">
+      <div style="width:8px; height:8px; border-radius:50%; background:#B45309; flex-shrink:0"></div>
+      <div style="flex:1; font-size:13px; color:#7A4A08"><b>2 supplies low</b> — Plywood 18mm, LED strip 4000K</div>
+      <div style="font-size:13px; font-weight:600; color:#B45309">View</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:center">
+      <div style="width:8px; height:8px; border-radius:50%; background:#0F766E; flex-shrink:0"></div>
+      <div style="flex:1; font-size:13px; color:#1B1F1E"><b>Delivery tomorrow</b> — Laminate sheets · Seng Huat Trading</div>
+      <div style="font-size:13px; font-weight:600; color:#0F766E">Track</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; gap:10px; align-items:center">
+      <div style="width:28px; height:36px; border-radius:4px; background:#E4F0EC; border:1px solid #C6DED7; display:flex; align-items:center; justify-content:center; color:#0F766E; font-weight:700; font-size:9px; flex-shrink:0">PDF</div>
+      <div style="flex:1; font-size:13px; color:#1B1F1E"><b>Drawings</b> — 2 sets · Sales Gallery &amp; Lobby</div>
+      <div style="font-size:13px; font-weight:600; color:#0F766E">Open</div>
+    </div>
+  </div>
+  <div style="display:flex; border-top:1px solid #E4E2DD; background:#FCFBF9; padding:10px 8px 26px">
+    <div style="flex:1; text-align:center; color:#0F766E"><div style="font-size:18px">⌂</div><div style="font-size:10px; font-weight:600">Home</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▤</div><div style="font-size:10px; font-weight:500">Phases</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▦</div><div style="font-size:10px; font-weight:500">Supplies</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">✎</div><div style="font-size:10px; font-weight:500">Report</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▭</div><div style="font-size:10px; font-weight:500">History</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ═══ 2 · PHASES ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">2 · Phases &amp; Subcon</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 10px">
+    <div style="font-size:24px; font-weight:700; color:#1B1F1E">Phases</div>
+    <div style="display:flex; gap:8px; margin-top:12px; overflow:hidden">
+      <div style="background:#0F766E; color:#fff; border-radius:99px; padding:6px 14px; font-size:13px; font-weight:600; white-space:nowrap">All 16</div>
+      <div style="background:#fff; border:1px solid #E4E2DD; color:#1B1F1E; border-radius:99px; padding:6px 14px; font-size:13px; white-space:nowrap">Classic Home</div>
+      <div style="background:#fff; border:1px solid #E4E2DD; color:#1B1F1E; border-radius:99px; padding:6px 14px; font-size:13px; white-space:nowrap">Fanmuli 定制</div>
+      <div style="background:#fff; border:1px solid #E4E2DD; color:#1B1F1E; border-radius:99px; padding:6px 14px; font-size:13px; white-space:nowrap">Ah Kang</div>
+    </div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:4px 20px 12px; display:flex; flex-direction:column; gap:14px">
+    <div>
+      <div style="font-size:12px; font-weight:600; color:#B45309; letter-spacing:0.05em; margin-bottom:8px">IN PROGRESS · 4</div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="font-size:15px; font-weight:600; color:#1B1F1E">Backdrop 01</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#0F766E">75%</div>
+          </div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin:9px 0"><div style="width:75%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+          <div style="display:flex; gap:6px; align-items:center">
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Classic Home</div>
+            <div style="font-size:12px; color:#6B7370">Due 18 Aug · photo logged today</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="font-size:15px; font-weight:600; color:#1B1F1E">Reception Counter 01</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#0F766E">50%</div>
+          </div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin:9px 0"><div style="width:50%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+          <div style="display:flex; gap:6px; align-items:center">
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Fanmuli 定制</div>
+            <div style="font-size:12px; color:#B3261E; font-weight:500">Blocked · waiting laminate delivery</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="font-size:15px; font-weight:600; color:#1B1F1E">Pantry</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#0F766E">30%</div>
+          </div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin:9px 0"><div style="width:30%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+          <div style="display:flex; gap:6px; align-items:center">
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Ah Kang</div>
+            <div style="font-size:12px; color:#6B7370">Wiring first fix · due 22 Aug</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <div style="font-size:15px; font-weight:600; color:#1B1F1E">Toilet Glass (M &amp; F)</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#0F766E">20%</div>
+          </div>
+          <div style="height:5px; background:#EDEBE6; border-radius:99px; margin:9px 0"><div style="width:20%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+          <div style="display:flex; gap:6px; align-items:center">
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Hock Heng</div>
+            <div style="font-size:12px; color:#6B7370">Measurement done · fabricating</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px; font-weight:600; color:#0F766E; letter-spacing:0.05em; margin-bottom:8px">DONE · 3</div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:500; color:#6B7370; text-decoration:line-through">Faithview Meeting — Pre-condition check</div>
+          <div style="color:#0F766E; font-size:15px">✓</div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:500; color:#6B7370; text-decoration:line-through">Material Prep</div>
+          <div style="color:#0F766E; font-size:15px">✓</div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:500; color:#6B7370; text-decoration:line-through">Site Meeting with Sub-con</div>
+          <div style="color:#0F766E; font-size:15px">✓</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px; font-weight:600; color:#6B7370; letter-spacing:0.05em; margin-bottom:8px">NOT STARTED · 9</div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:500; color:#1B1F1E">Backdrop 02</div>
+          <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Classic Home</div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:500; color:#1B1F1E">Model House</div>
+          <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Fanmuli 定制</div>
+        </div>
+        <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:500; color:#1B1F1E">Type Unit Signage A/B</div>
+          <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Hock Heng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex; border-top:1px solid #E4E2DD; background:#FCFBF9; padding:10px 8px 26px">
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">⌂</div><div style="font-size:10px; font-weight:500">Home</div></div>
+    <div style="flex:1; text-align:center; color:#0F766E"><div style="font-size:18px">▤</div><div style="font-size:10px; font-weight:600">Phases</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▦</div><div style="font-size:10px; font-weight:500">Supplies</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">✎</div><div style="font-size:10px; font-weight:500">Report</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▭</div><div style="font-size:10px; font-weight:500">History</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ═══ 3 · SUPPLIES ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">3 · Supplies</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 10px">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div style="font-size:24px; font-weight:700; color:#1B1F1E">Supplies</div>
+      <div style="width:34px; height:34px; border-radius:50%; background:#0F766E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:500">+</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:10px; padding:10px 14px; margin-top:12px; font-size:14px; color:#9AA09C">⌕ &nbsp;Search materials…</div>
+    <div style="display:flex; gap:8px; margin-top:10px">
+      <div style="background:#0F766E; color:#fff; border-radius:99px; padding:5px 13px; font-size:13px; font-weight:600">All</div>
+      <div style="background:#FBF3E4; border:1px solid #EBD9B4; color:#B45309; border-radius:99px; padding:5px 13px; font-size:13px; font-weight:600">Low stock · 2</div>
+      <div style="background:#fff; border:1px solid #E4E2DD; color:#1B1F1E; border-radius:99px; padding:5px 13px; font-size:13px">In transit · 3</div>
+    </div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:4px 20px 12px; display:flex; flex-direction:column; gap:8px">
+    <div style="background:#fff; border:1.5px solid #EBD9B4; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">Plywood 18mm</div>
+        <div style="font-size:11px; background:#FBF3E4; color:#B45309; border-radius:5px; padding:3px 8px; font-weight:700">LOW — REORDER</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370">
+        <span>On site · Store room B</span><span style="font-family:'IBM Plex Mono',monospace; color:#B45309; font-weight:500">6 / 40 pcs</span>
+      </div>
+      <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:7px"><div style="width:15%; height:100%; background:#B45309; border-radius:99px"></div></div>
+    </div>
+    <div style="background:#fff; border:1.5px solid #EBD9B4; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">LED strip 4000K</div>
+        <div style="font-size:11px; background:#FBF3E4; color:#B45309; border-radius:5px; padding:3px 8px; font-weight:700">LOW — REORDER</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370">
+        <span>On site · with Ah Kang</span><span style="font-family:'IBM Plex Mono',monospace; color:#B45309; font-weight:500">8 / 60 m</span>
+      </div>
+      <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:7px"><div style="width:13%; height:100%; background:#B45309; border-radius:99px"></div></div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">Laminate sheets — Walnut</div>
+        <div style="font-size:11px; background:#E7EDF8; color:#1E40AF; border-radius:5px; padding:3px 8px; font-weight:700">ARRIVES 13 AUG</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370">
+        <span>In transit · Seng Huat Trading</span><span style="font-family:'IBM Plex Mono',monospace">25 pcs ordered</span>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">Tempered glass panels</div>
+        <div style="font-size:11px; background:#E7EDF8; color:#1E40AF; border-radius:5px; padding:3px 8px; font-weight:700">ARRIVES 15 AUG</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370">
+        <span>Fabricating · Hock Heng workshop</span><span style="font-family:'IBM Plex Mono',monospace">4 panels</span>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">Wiring — 2.5mm² cable</div>
+        <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:3px 8px; font-weight:700">OK</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370">
+        <span>On site · Store room A</span><span style="font-family:'IBM Plex Mono',monospace; color:#0F766E; font-weight:500">180 / 300 m</span>
+      </div>
+      <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:7px"><div style="width:60%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">Paint — Nippon Matt White</div>
+        <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:3px 8px; font-weight:700">OK</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#6B7370">
+        <span>On site · Store room A</span><span style="font-family:'IBM Plex Mono',monospace; color:#0F766E; font-weight:500">14 / 20 L</span>
+      </div>
+      <div style="height:5px; background:#EDEBE6; border-radius:99px; margin-top:7px"><div style="width:70%; height:100%; background:#0F766E; border-radius:99px"></div></div>
+    </div>
+  </div>
+  <div style="display:flex; border-top:1px solid #E4E2DD; background:#FCFBF9; padding:10px 8px 26px">
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">⌂</div><div style="font-size:10px; font-weight:500">Home</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▤</div><div style="font-size:10px; font-weight:500">Phases</div></div>
+    <div style="flex:1; text-align:center; color:#0F766E"><div style="font-size:18px">▦</div><div style="font-size:10px; font-weight:600">Supplies</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">✎</div><div style="font-size:10px; font-weight:500">Report</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▭</div><div style="font-size:10px; font-weight:500">History</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ═══ 4 · SUPPLY DETAIL ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">4 · Supply Detail</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 10px; display:flex; align-items:center; gap:12px">
+    <div style="font-size:20px; color:#0F766E">‹</div>
+    <div style="font-size:18px; font-weight:700; color:#1B1F1E">Plywood 18mm</div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:4px 20px 12px; display:flex; flex-direction:column; gap:12px">
+    <div style="background:#FBF3E4; border:1px solid #EBD9B4; border-radius:16px; padding:16px">
+      <div style="display:flex; justify-content:space-between; align-items:baseline">
+        <div style="font-size:13px; font-weight:600; color:#7A4A08">STOCK ON SITE</div>
+        <div style="font-size:11px; background:#B45309; color:#fff; border-radius:5px; padding:3px 8px; font-weight:700">BELOW MINIMUM</div>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:6px; margin-top:6px">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:36px; font-weight:500; color:#1B1F1E">6</div>
+        <div style="font-size:14px; color:#6B7370">/ 40 pcs · min. 10</div>
+      </div>
+      <div style="height:8px; background:#F1E4C8; border-radius:99px; margin-top:10px"><div style="width:15%; height:100%; background:#B45309; border-radius:99px"></div></div>
+      <div style="font-size:12px; color:#7A4A08; margin-top:8px">At current usage (~4 pcs/day) stock runs out in <b>~1.5 days</b></div>
+    </div>
+    <div style="background:#0F766E; color:#fff; border-radius:12px; text-align:center; padding:14px; font-weight:600; font-size:15px">Reorder 30 pcs — RM 2,340</div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em">DETAILS</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; font-size:13px">
+        <div><div style="color:#6B7370; font-size:12px">Location</div><div style="font-weight:600; color:#1B1F1E">Store room B</div></div>
+        <div><div style="color:#6B7370; font-size:12px">Unit cost</div><div style="font-weight:600; color:#1B1F1E">RM 78 / pc</div></div>
+        <div><div style="color:#6B7370; font-size:12px">Used by</div><div style="font-weight:600; color:#1B1F1E">Classic Home</div></div>
+        <div><div style="color:#6B7370; font-size:12px">Spent to date</div><div style="font-weight:600; color:#1B1F1E">RM 2,652</div></div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em">SUPPLIER</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px">
+        <div>
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Seng Huat Trading Sdn Bhd</div>
+          <div style="font-size:12px; color:#6B7370">Lead time 2–3 days · last order 28 Jul</div>
+        </div>
+        <div style="display:flex; gap:8px">
+          <div style="width:36px; height:36px; border-radius:50%; background:#E4F0EC; color:#0F766E; display:flex; align-items:center; justify-content:center; font-size:15px">✆</div>
+          <div style="width:36px; height:36px; border-radius:50%; background:#E4F0EC; color:#0F766E; display:flex; align-items:center; justify-content:center; font-size:15px">✉</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.05em">MOVEMENT</div>
+      <div style="display:flex; flex-direction:column; gap:0; margin-top:6px">
+        <div style="display:flex; gap:12px; padding:9px 0; border-bottom:1px solid #F0EEE9; font-size:13px">
+          <div style="color:#6B7370; width:52px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:12px">12 Aug</div>
+          <div style="flex:1; color:#1B1F1E">Used — Backdrop 01 cladding</div>
+          <div style="color:#B3261E; font-weight:600">−4</div>
+        </div>
+        <div style="display:flex; gap:12px; padding:9px 0; border-bottom:1px solid #F0EEE9; font-size:13px">
+          <div style="color:#6B7370; width:52px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:12px">11 Aug</div>
+          <div style="flex:1; color:#1B1F1E">Used — Backdrop 01 framing</div>
+          <div style="color:#B3261E; font-weight:600">−5</div>
+        </div>
+        <div style="display:flex; gap:12px; padding:9px 0; font-size:13px">
+          <div style="color:#6B7370; width:52px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:12px">28 Jul</div>
+          <div style="flex:1; color:#1B1F1E">Delivered — PO #1042</div>
+          <div style="color:#0F766E; font-weight:600">+40</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ═══ 5 · DAILY REPORT ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">5 · Daily Report (SOP)</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 10px">
+    <div style="font-size:24px; font-weight:700; color:#1B1F1E">Daily report</div>
+    <div style="font-size:13px; color:#6B7370; margin-top:2px">Tue 12 Aug · Faithview Gallery · 2 of 5 steps done</div>
+    <div style="display:flex; gap:4px; margin-top:10px">
+      <div style="flex:1; height:4px; border-radius:99px; background:#0F766E"></div>
+      <div style="flex:1; height:4px; border-radius:99px; background:#0F766E"></div>
+      <div style="flex:1; height:4px; border-radius:99px; background:#D8D5CE"></div>
+      <div style="flex:1; height:4px; border-radius:99px; background:#D8D5CE"></div>
+      <div style="flex:1; height:4px; border-radius:99px; background:#D8D5CE"></div>
+    </div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:4px 20px 12px; display:flex; flex-direction:column; gap:12px">
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:14px; font-weight:600; color:#1B1F1E">1 · Site photos <span style="color:#6B7370; font-weight:400">(min. 3)</span></div>
+        <div style="color:#0F766E; font-weight:700; font-size:14px">✓ 4 added</div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <div style="width:64px; height:64px; border-radius:8px; background:linear-gradient(135deg,#C9C4BA,#A8A296)"></div>
+        <div style="width:64px; height:64px; border-radius:8px; background:linear-gradient(135deg,#B9B4A8,#98928a)"></div>
+        <div style="width:64px; height:64px; border-radius:8px; background:linear-gradient(135deg,#CFCabf,#ABA79c)"></div>
+        <div style="width:64px; height:64px; border-radius:8px; background:linear-gradient(135deg,#C2BDB2,#9E988E)"></div>
+        <div style="width:64px; height:64px; border-radius:8px; border:1.5px dashed #C9C4BA; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:22px">+</div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:14px; font-weight:600; color:#1B1F1E">2 · Manpower on site</div>
+        <div style="color:#0F766E; font-weight:700; font-size:14px">✓</div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <div style="flex:1; background:#F6F5F3; border-radius:8px; padding:8px 10px; font-size:12px"><b style="font-size:16px">4</b><br>Classic Home</div>
+        <div style="flex:1; background:#F6F5F3; border-radius:8px; padding:8px 10px; font-size:12px"><b style="font-size:16px">3</b><br>Fanmuli 定制</div>
+        <div style="flex:1; background:#F6F5F3; border-radius:8px; padding:8px 10px; font-size:12px"><b style="font-size:16px">2</b><br>Ah Kang</div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1.5px solid #0F766E; border-radius:12px; padding:14px">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="font-size:14px; font-weight:600; color:#1B1F1E">3 · Material used today</div>
+        <div style="color:#B45309; font-weight:600; font-size:13px">In progress</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px">
+        <div style="display:flex; gap:8px; align-items:center">
+          <div style="flex:1; background:#F6F5F3; border-radius:8px; padding:9px 12px; font-size:13px; color:#1B1F1E">Plywood 18mm</div>
+          <div style="width:74px; background:#F6F5F3; border-radius:8px; padding:9px 0; font-size:13px; text-align:center; font-family:'IBM Plex Mono',monospace">4 pcs</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <div style="flex:1; background:#F6F5F3; border-radius:8px; padding:9px 12px; font-size:13px; color:#1B1F1E">Wiring 2.5mm²</div>
+          <div style="width:74px; background:#F6F5F3; border-radius:8px; padding:9px 0; font-size:13px; text-align:center; font-family:'IBM Plex Mono',monospace">35 m</div>
+        </div>
+        <div style="font-size:13px; font-weight:600; color:#0F766E; padding:2px">+ Add material</div>
+      </div>
+      <div style="font-size:12px; color:#6B7370; margin-top:8px; background:#F6F5F3; border-radius:8px; padding:8px 10px">Stock levels update automatically when you submit</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="font-size:14px; font-weight:600; color:#9AA09C">4 · Work done summary</div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+      <div style="font-size:14px; font-weight:600; color:#9AA09C">5 · Issues / blockers <span style="font-weight:400">(optional)</span></div>
+    </div>
+  </div>
+  <div style="padding:12px 20px 30px; background:#FCFBF9; border-top:1px solid #E4E2DD">
+    <div style="background:#D8D5CE; color:#8B897F; border-radius:12px; text-align:center; padding:14px; font-weight:600; font-size:15px">Submit report — 3 steps left</div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ═══ 6 · HISTORY ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">6 · Report History</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 10px">
+    <div style="font-size:24px; font-weight:700; color:#1B1F1E">History</div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:4px 20px 12px; display:flex; flex-direction:column; gap:12px">
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <div style="font-size:15px; font-weight:600; color:#1B1F1E">August 2026</div>
+        <div style="display:flex; gap:16px; color:#0F766E; font-weight:600">‹ &nbsp;›</div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; font-size:12px; color:#9AA09C; margin-bottom:6px">
+        <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; font-size:13px; color:#1B1F1E">
+        <div style="padding:7px 0; color:#D8D5CE">27</div><div style="padding:7px 0; color:#D8D5CE">28</div><div style="padding:7px 0; color:#D8D5CE">29</div><div style="padding:7px 0; color:#D8D5CE">30</div><div style="padding:7px 0; color:#D8D5CE">31</div><div style="padding:7px 0">1</div><div style="padding:7px 0; color:#9AA09C">2</div>
+        <div style="padding:7px 0; background:#E4F0EC; border-radius:8px; font-weight:600; color:#0F766E">3</div><div style="padding:7px 0; background:#E4F0EC; border-radius:8px; font-weight:600; color:#0F766E">4</div><div style="padding:7px 0; background:#E4F0EC; border-radius:8px; font-weight:600; color:#0F766E">5</div><div style="padding:7px 0; background:#E4F0EC; border-radius:8px; font-weight:600; color:#0F766E">6</div><div style="padding:7px 0; background:#E4F0EC; border-radius:8px; font-weight:600; color:#0F766E">7</div><div style="padding:7px 0">8</div><div style="padding:7px 0; color:#9AA09C">9</div>
+        <div style="padding:7px 0; background:#E4F0EC; border-radius:8px; font-weight:600; color:#0F766E">10</div><div style="padding:7px 0; background:#FBF3E4; border-radius:8px; font-weight:600; color:#B45309">11</div><div style="padding:7px 0; background:#0F766E; border-radius:8px; font-weight:700; color:#fff">12</div><div style="padding:7px 0">13</div><div style="padding:7px 0">14</div><div style="padding:7px 0">15</div><div style="padding:7px 0; color:#9AA09C">16</div>
+        <div style="padding:7px 0">17</div><div style="padding:7px 0">18</div><div style="padding:7px 0">19</div><div style="padding:7px 0">20</div><div style="padding:7px 0">21</div><div style="padding:7px 0">22</div><div style="padding:7px 0; color:#9AA09C">23</div>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:12px; font-size:11px; color:#6B7370">
+        <div style="display:flex; align-items:center; gap:5px"><div style="width:8px; height:8px; border-radius:2px; background:#E4F0EC; border:1px solid #0F766E"></div>Complete</div>
+        <div style="display:flex; align-items:center; gap:5px"><div style="width:8px; height:8px; border-radius:2px; background:#FBF3E4; border:1px solid #B45309"></div>Incomplete</div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Mon 11 Aug</div>
+          <div style="font-size:11px; background:#FBF3E4; color:#B45309; border-radius:5px; padding:3px 8px; font-weight:700">NO MATERIAL LOG</div>
+        </div>
+        <div style="font-size:12px; color:#6B7370; margin-top:6px">3 photos · 8 workers · Backdrop 01 framing, wiring first fix at Pantry</div>
+        <div style="display:flex; gap:14px; margin-top:10px; font-size:13px; font-weight:600; color:#0F766E">
+          <div>View report</div><div>Share PDF ↗</div>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Sun 10 Aug</div>
+          <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:3px 8px; font-weight:700">COMPLETE</div>
+        </div>
+        <div style="font-size:12px; color:#6B7370; margin-top:6px">5 photos · 9 workers · Reception Counter 01 carcass done, laminate pending</div>
+        <div style="display:flex; gap:14px; margin-top:10px; font-size:13px; font-weight:600; color:#0F766E">
+          <div>View report</div><div>Share PDF ↗</div>
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #E4E2DD; border-radius:12px; padding:14px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:14px; font-weight:600; color:#1B1F1E">Thu 7 Aug</div>
+          <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:3px 8px; font-weight:700">COMPLETE</div>
+        </div>
+        <div style="font-size:12px; color:#6B7370; margin-top:6px">4 photos · 7 workers · Backdrop 01 cladding started</div>
+        <div style="display:flex; gap:14px; margin-top:10px; font-size:13px; font-weight:600; color:#0F766E">
+          <div>View report</div><div>Share PDF ↗</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex; border-top:1px solid #E4E2DD; background:#FCFBF9; padding:10px 8px 26px">
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">⌂</div><div style="font-size:10px; font-weight:500">Home</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▤</div><div style="font-size:10px; font-weight:500">Phases</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▦</div><div style="font-size:10px; font-weight:500">Supplies</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">✎</div><div style="font-size:10px; font-weight:500">Report</div></div>
+    <div style="flex:1; text-align:center; color:#0F766E"><div style="font-size:18px">▭</div><div style="font-size:10px; font-weight:600">History</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<!-- ═══ 7 · DRAWINGS ═══ -->
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="font-size:13px; font-weight:600; color:#6B7370; letter-spacing:0.08em; text-transform:uppercase">7 · Drawings</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="height:100%; display:flex; flex-direction:column; background:#F6F5F3; font-family:'IBM Plex Sans',sans-serif; padding-top:62px; box-sizing:border-box">
+  <div style="padding:8px 20px 10px">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div style="font-size:24px; font-weight:700; color:#1B1F1E">Drawings</div>
+      <div style="width:34px; height:34px; border-radius:50%; background:#0F766E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:500">+</div>
+    </div>
+    <div style="font-size:13px; color:#6B7370; margin-top:2px">Faithview Gallery · 2 drawing sets</div>
+  </div>
+  <div style="flex:1; overflow:auto; padding:8px 20px 12px; display:flex; flex-direction:column; gap:12px">
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+      <div style="display:flex; gap:12px; align-items:flex-start">
+        <div style="width:44px; height:56px; border-radius:6px; background:#E4F0EC; border:1px solid #C6DED7; display:flex; align-items:center; justify-content:center; color:#0F766E; font-weight:700; font-size:11px; flex-shrink:0">PDF</div>
+        <div style="flex:1; min-width:0">
+          <div style="font-size:15px; font-weight:600; color:#1B1F1E">LOT 26662 — Sales Gallery</div>
+          <div style="font-size:12px; color:#6B7370; margin-top:2px">10 pages · Rev. 31 Jul 2026</div>
+          <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap">
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Backdrop 01–04</div>
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Model House</div>
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Pantry</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px; overflow:hidden">
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">P.1</div>
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">P.2</div>
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">P.3</div>
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">+7</div>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; color:#0F766E">
+        <div>Open</div><div>Share ↗</div><div style="color:#6B7370; font-weight:500">Link to phase</div>
+      </div>
+    </div>
+    <div style="background:#fff; border:1px solid #E4E2DD; border-radius:16px; padding:16px">
+      <div style="display:flex; gap:12px; align-items:flex-start">
+        <div style="width:44px; height:56px; border-radius:6px; background:#E4F0EC; border:1px solid #C6DED7; display:flex; align-items:center; justify-content:center; color:#0F766E; font-weight:700; font-size:11px; flex-shrink:0">PDF</div>
+        <div style="flex:1; min-width:0">
+          <div style="font-size:15px; font-weight:600; color:#1B1F1E">LOT 26662 — Sales Gallery (Lobby)</div>
+          <div style="font-size:12px; color:#6B7370; margin-top:2px">13 pages · Rev. 31 Jul 2026</div>
+          <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap">
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Reception Counter 01–02</div>
+            <div style="font-size:11px; background:#E4F0EC; color:#0F766E; border-radius:5px; padding:2px 7px; font-weight:600">Sitting Area 01–02</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px; overflow:hidden">
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">P.1</div>
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">P.2</div>
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">P.3</div>
+        <div style="width:72px; height:52px; border-radius:6px; background:#EDEBE6; border:1px solid #E4E2DD; display:flex; align-items:center; justify-content:center; color:#9AA09C; font-size:10px; font-family:'IBM Plex Mono',monospace">+10</div>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:12px; font-size:13px; font-weight:600; color:#0F766E">
+        <div>Open</div><div>Share ↗</div><div style="color:#6B7370; font-weight:500">Link to phase</div>
+      </div>
+    </div>
+    <div style="border:1.5px dashed #C9C4BA; border-radius:16px; padding:18px; text-align:center; color:#6B7370; font-size:13px">
+      <span style="color:#0F766E; font-weight:600">+ Upload drawing</span> — PDF, image or photo of a sketch
+    </div>
+  </div>
+  <div style="display:flex; border-top:1px solid #E4E2DD; background:#FCFBF9; padding:10px 8px 26px">
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">⌂</div><div style="font-size:10px; font-weight:500">Home</div></div>
+    <div style="flex:1; text-align:center; color:#0F766E"><div style="font-size:18px">▤</div><div style="font-size:10px; font-weight:600">Phases</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▦</div><div style="font-size:10px; font-weight:500">Supplies</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">✎</div><div style="font-size:10px; font-weight:500">Report</div></div>
+    <div style="flex:1; text-align:center; color:#9AA09C"><div style="font-size:18px">▭</div><div style="font-size:10px; font-weight:500">History</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+</section>
+</x-dc>
+</body>
+</html>
