@@ -168,12 +168,12 @@ export function seedState(): AppState {
       {
         id: 'dw1', name: 'LOT 26662 — Sales Gallery', pages: 10, revISO: d(-12),
         tags: ['Backdrop 01–04', 'Model House', 'Pantry'],
-        src: { kind: 'bundled', url: '/drawings/sales-gallery.pdf' },
+        src: { kind: 'bundled', url: 'drawings/sales-gallery.pdf' },
       },
       {
         id: 'dw2', name: 'LOT 26662 — Sales Gallery (Lobby)', pages: 13, revISO: d(-12),
         tags: ['Reception Counter 01–02', 'Sitting Area 01–02'],
-        src: { kind: 'bundled', url: '/drawings/sales-gallery-lobby.pdf' },
+        src: { kind: 'bundled', url: 'drawings/sales-gallery-lobby.pdf' },
       },
     ],
     draft: emptyDraft(SUBCONS),

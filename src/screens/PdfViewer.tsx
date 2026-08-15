@@ -3,6 +3,7 @@ import { ChevronLeft, ExternalLink } from 'lucide-react'
 import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
 import { fileGet } from '../db'
+import { assetUrl } from '../utils/base'
 
 export function PdfViewer({ drawingId }: { drawingId: string }) {
   const s = useAppState()
@@ -16,7 +17,7 @@ export function PdfViewer({ drawingId }: { drawingId: string }) {
     let objectUrl: string | null = null
     if (!ds) return
     if (ds.src.kind === 'bundled') {
-      setUrl(ds.src.url)
+      setUrl(assetUrl(ds.src.url))
       setIsImage(false)
     } else {
       const src = ds.src

@@ -34,6 +34,14 @@ node scripts/smoke.mjs   # e2e smoke test against the preview server (needs prev
 
 Note: the service worker is only generated for production builds — test install/offline behavior via `npm run build && npm run preview`.
 
+## Deploy (GitHub Pages)
+
+Every push to `claude/pwa-development-hzfgvy` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which builds the app with `--base=/tenn-project-progress-app/` and publishes `dist/` to the `gh-pages` branch. One-time setup in the repo:
+
+1. **Settings → Pages → Source: Deploy from a branch → `gh-pages` / `(root)` → Save**
+
+The app is then live at **https://lczx122.github.io/tenn-project-progress-app/** — open it on a phone and use "Add to Home Screen" to install it.
+
 ## Structure
 
 ```

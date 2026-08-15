@@ -4,6 +4,7 @@ import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { fmtFull, todayISO } from '../utils/dates'
 import { fileGet, filePut } from '../db'
+import { assetUrl } from '../utils/base'
 import type { DrawingSet } from '../types'
 
 async function countPdfPages(file: File): Promise<number> {
@@ -49,7 +50,7 @@ export function Drawings() {
     try {
       let blob: Blob | undefined
       if (ds.src.kind === 'bundled') {
-        blob = await fetch(ds.src.url).then((r) => (r.ok ? r.blob() : undefined))
+        blob = await fetch(assetUrl(ds.src.url)).then((r) => (r.ok ? r.blob() : undefined))
       } else {
         blob = await fileGet(ds.src.blobId)
       }
