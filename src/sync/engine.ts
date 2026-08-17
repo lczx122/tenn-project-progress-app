@@ -65,6 +65,21 @@ export function useSyncStatus(): { status: SyncStatus; error: string } {
 const saveMeta = () => kvSet(META_KEY, meta).catch(() => {})
 const saveQueue = () => kvSet(QUEUE_KEY, queue).catch(() => {})
 
+/** Supabase errors are plain objects, not Error instances — surface something readable. */
+function errMsg(e: unknown): string {
+  const raw =
+    e instanceof Error
+      ? e.message
+      : e && typeof e === 'object' && typeof (e as { message?: unknown }).message === 'string'
+        ? ((e as { message: string }).message)
+        : String(e)
+  // the one predictable setup error: schema.sql not run yet
+  if (/shared_state/.test(raw) && /(does not exist|schema cache)/i.test(raw)) {
+    return 'Database not set up yet — run supabase/schema.sql in the Supabase SQL Editor'
+  }
+  return raw === '[object Object]' ? 'Unknown sync error' : raw
+}
+
 // ------------------------------- engine -------------------------------
 
 export async function startSync(): Promise<void> {
@@ -132,7 +147,7 @@ async function fullSync(): Promise<void> {
     await drainUploadQueue()
     setStatus('synced')
   } catch (e) {
-    setStatus(navigator.onLine ? 'error' : 'offline', e instanceof Error ? e.message : String(e))
+    setStatus(navigator.onLine ? 'error' : 'offline', errMsg(e))
   } finally {
     running = false
     // a local change may have landed mid-sync
