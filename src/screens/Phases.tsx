@@ -125,26 +125,34 @@ export function Phases() {
               NOT STARTED · {todo.length}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {todo.map((ph) => (
-                <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {editBtn(ph)}
-                    {ph.work.map((w) => (
-                      <div key={w.subcon} className="tag">{w.subcon}</div>
-                    ))}
-                    <button
-                      style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px' }}
-                      onClick={() => {
-                        actions.startPhase(ph.id)
-                        ui.showToast(`${ph.name} started`)
-                      }}
-                    >
-                      Start
-                    </button>
+              {todo.map((ph) => {
+                const multi = ph.work.length > 1
+                return (
+                  <div key={ph.id} className="card" style={{ padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
+                      {editBtn(ph)}
+                      {!multi && ph.work[0] && <div className="tag" style={{ flexShrink: 0 }}>{ph.work[0].subcon}</div>}
+                      <button
+                        style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px', flexShrink: 0 }}
+                        onClick={() => {
+                          actions.startPhase(ph.id)
+                          ui.showToast(`${ph.name} started`)
+                        }}
+                      >
+                        Start
+                      </button>
+                    </div>
+                    {multi && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                        {ph.work.map((w) => (
+                          <div key={w.subcon} className="tag">{w.subcon}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
