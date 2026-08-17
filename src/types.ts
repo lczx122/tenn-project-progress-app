@@ -1,11 +1,16 @@
 export type PhaseStatus = 'todo' | 'prog' | 'done'
 
+/** One subcontractor's individually-tracked progress within a phase. */
+export interface PhaseWork {
+  subcon: string
+  pct: number
+}
+
 export interface Phase {
   id: string
   name: string
-  subcon: string
-  status: PhaseStatus
-  pct: number
+  /** One entry per assigned subcontractor; phase progress is their average. */
+  work: PhaseWork[]
   note?: string
   blocked?: boolean
 }

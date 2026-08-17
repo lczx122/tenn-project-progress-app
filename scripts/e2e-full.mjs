@@ -44,7 +44,7 @@ check('phase: add', await page.isVisible('.card:has-text("Audit Phase")'))
 
 await page.locator('button[aria-label="Edit Audit Phase"]').click()
 await page.waitForTimeout(500)
-await page.click('.sheet .chip:has-text("In progress")')
+await page.click('.sheet button[aria-label="Increase Ah Kang"]')
 await page.click('.sheet button:has-text("Save changes")')
 await page.waitForTimeout(600)
 check('phase: edit → in progress at 5%', await page.isVisible('.card:has-text("Audit Phase") >> text=5%'))
@@ -52,6 +52,23 @@ check('phase: edit → in progress at 5%', await page.isVisible('.card:has-text(
 await page.click('.card:has-text("Audit Phase") button:has-text("+5%")')
 await page.waitForTimeout(200)
 check('phase: +5% bump', await page.isVisible('.card:has-text("Audit Phase") >> text=10%'))
+
+// multi-subcon phase: Pantry has Ah Kang 30% + Classic Home 15%, tracked separately
+const pantry = page.locator('.card:has-text("Pantry")')
+check(
+  'phase: multi-subcon rows tracked individually',
+  (await pantry.locator('.tag:has-text("Ah Kang")').count()) === 1 &&
+    (await pantry.locator('.tag:has-text("Classic Home")').count()) === 1 &&
+    (await pantry.locator('text=30%').count()) === 1 &&
+    (await pantry.locator('text=15%').count()) === 1,
+)
+// bumping one subcon moves only that subcon (30 → 35, the other stays 15)
+await pantry.locator('button[aria-label="+5% Ah Kang"]').click()
+await page.waitForTimeout(200)
+check(
+  'phase: bump affects only its subcon',
+  (await pantry.locator('text=35%').count()) === 1 && (await pantry.locator('text=15%').count()) === 1,
+)
 
 await page.locator('button[aria-label="Edit Audit Phase"]').click()
 await page.waitForTimeout(500)

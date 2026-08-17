@@ -1,8 +1,20 @@
 // Derived values shared across screens (mirrors the prototype's renderVals()).
-import type { Draft, Phase, Project, Supply } from './types'
+import type { Draft, Phase, PhaseStatus, Project, Supply } from './types'
 
 export function phasePct(p: Phase): number {
-  return p.status === 'done' ? 100 : p.status === 'prog' ? p.pct : 0
+  if (p.work.length === 0) return 0
+  return Math.round(p.work.reduce((a, w) => a + w.pct, 0) / p.work.length)
+}
+
+/** Done only when every assigned subcon is at 100%; in progress once any has started. */
+export function phaseStatus(p: Phase): PhaseStatus {
+  if (p.work.length > 0 && p.work.every((w) => w.pct >= 100)) return 'done'
+  if (p.work.some((w) => w.pct > 0)) return 'prog'
+  return 'todo'
+}
+
+export function phaseHasSubcon(p: Phase, name: string): boolean {
+  return p.work.some((w) => w.subcon === name)
 }
 
 export function overallPct(project: Project): number {
@@ -10,10 +22,11 @@ export function overallPct(project: Project): number {
   return Math.round(project.phases.reduce((a, p) => a + phasePct(p), 0) / project.phases.length)
 }
 
+/** Average over the subcon's individual assignments across all phases. */
 export function subconPct(project: Project, name: string): number {
-  const ps = project.phases.filter((p) => p.subcon === name)
-  if (ps.length === 0) return 0
-  return Math.round(ps.reduce((a, p) => a + phasePct(p), 0) / ps.length)
+  const works = project.phases.flatMap((p) => p.work.filter((w) => w.subcon === name))
+  if (works.length === 0) return 0
+  return Math.round(works.reduce((a, w) => a + w.pct, 0) / works.length)
 }
 
 export function isLow(s: Supply): boolean {

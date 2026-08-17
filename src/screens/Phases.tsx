@@ -3,6 +3,7 @@ import { Pencil } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { PhaseEditSheet } from '../components/PhaseEditSheet'
+import { phaseHasSubcon, phasePct, phaseStatus } from '../selectors'
 import { haptic } from '../utils/motion'
 import type { Phase } from '../types'
 
@@ -14,20 +15,26 @@ export function Phases() {
   // null = closed, '' = adding, otherwise the phase id being edited
   const [editing, setEditing] = useState<string | null>(null)
 
-  const fBy = (list: Phase[]) => (pf === 'All' ? list : list.filter((ph) => ph.subcon === pf))
-  const inProg = fBy(p.phases.filter((ph) => ph.status === 'prog'))
-  const done = fBy(p.phases.filter((ph) => ph.status === 'done'))
-  const todo = fBy(p.phases.filter((ph) => ph.status === 'todo'))
+  const fBy = (list: Phase[]) => (pf === 'All' ? list : list.filter((ph) => phaseHasSubcon(ph, pf)))
+  const inProg = fBy(p.phases.filter((ph) => phaseStatus(ph) === 'prog'))
+  const done = fBy(p.phases.filter((ph) => phaseStatus(ph) === 'done'))
+  const todo = fBy(p.phases.filter((ph) => phaseStatus(ph) === 'todo'))
 
   const chips = ['All', ...p.subcons.map((g) => g.name)]
 
-  const bump = (ph: Phase) => {
-    const completed = actions.bumpPhase(ph.id)
+  const bump = (ph: Phase, subcon: string) => {
+    const completed = actions.bumpPhaseWork(ph.id, subcon)
     if (completed) {
       haptic([12, 60, 12])
       ui.showToast(`${ph.name} marked done 🎉`)
     }
   }
+
+  const editBtn = (ph: Phase) => (
+    <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
+      <Pencil size={14} />
+    </button>
+  )
 
   return (
     <>
@@ -35,11 +42,7 @@ export function Phases() {
         <div className="screen-title">Phases</div>
         <div style={{ display: 'flex', gap: 8, marginTop: 12, overflowX: 'auto', paddingBottom: 2 }}>
           {chips.map((n) => (
-            <button
-              key={n}
-              className={`chip ${pf === n ? 'active' : ''}`}
-              onClick={() => ui.setPhaseFilter(n)}
-            >
+            <button key={n} className={`chip ${pf === n ? 'active' : ''}`} onClick={() => ui.setPhaseFilter(n)}>
               {n === 'All' ? `All ${p.phases.length}` : n}
             </button>
           ))}
@@ -57,26 +60,42 @@ export function Phases() {
                 <div key={ph.id} className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, flex: 1, minWidth: 0 }}>{ph.name}</div>
-                    <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
-                      <Pencil size={14} />
-                    </button>
-                    <div className="mono" style={{ fontSize: 13, color: 'var(--teal)' }}>{ph.pct}%</div>
+                    {editBtn(ph)}
+                    <div className="mono" style={{ fontSize: 13, color: 'var(--teal)' }}>{phasePct(ph)}%</div>
                   </div>
                   <div className="bar" style={{ height: 5, margin: '9px 0' }}>
-                    <div style={{ width: `${ph.pct}%` }} />
+                    <div style={{ width: `${phasePct(ph)}%` }} />
                   </div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <div className="tag">{ph.subcon}</div>
-                    <div style={{ flex: 1, fontSize: 12, color: ph.blocked ? 'var(--danger)' : 'var(--text-2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {/* one row per subcontractor, tracked individually */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {ph.work.map((w) => (
+                      <div key={w.subcon} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div className="tag" style={{ flexShrink: 0 }}>{w.subcon}</div>
+                        <div className="bar" style={{ height: 4, flex: 1 }}>
+                          <div style={{ width: `${w.pct}%`, background: w.pct >= 100 ? 'var(--teal)' : undefined }} />
+                        </div>
+                        <div className="mono" style={{ fontSize: 12, color: w.pct >= 100 ? 'var(--teal)' : 'var(--text-2)', width: 38, textAlign: 'right' }}>
+                          {w.pct}%
+                        </div>
+                        {w.pct >= 100 ? (
+                          <div style={{ color: 'var(--teal)', fontSize: 13, width: 44, textAlign: 'center' }}>✓</div>
+                        ) : (
+                          <button
+                            aria-label={`+5% ${w.subcon}`}
+                            style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '2px 8px', flexShrink: 0, width: 44 }}
+                            onClick={() => bump(ph, w.subcon)}
+                          >
+                            {w.pct === 0 ? '▸' : '+5%'}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {ph.note && (
+                    <div style={{ fontSize: 12, color: ph.blocked ? 'var(--danger)' : 'var(--text-2)', marginTop: 8 }}>
                       {ph.note}
                     </div>
-                    <button
-                      style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px', flexShrink: 0 }}
-                      onClick={() => bump(ph)}
-                    >
-                      +5%
-                    </button>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -92,9 +111,7 @@ export function Phases() {
               {done.map((ph) => (
                 <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', textDecoration: 'line-through', flex: 1, minWidth: 0 }}>{ph.name}</div>
-                  <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
-                    <Pencil size={14} />
-                  </button>
+                  {editBtn(ph)}
                   <div style={{ color: 'var(--teal)', fontSize: 15 }}>✓</div>
                 </div>
               ))}
@@ -111,11 +128,11 @@ export function Phases() {
               {todo.map((ph) => (
                 <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                    <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
-                      <Pencil size={14} />
-                    </button>
-                    <div className="tag">{ph.subcon}</div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {editBtn(ph)}
+                    {ph.work.map((w) => (
+                      <div key={w.subcon} className="tag">{w.subcon}</div>
+                    ))}
                     <button
                       style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px' }}
                       onClick={() => {

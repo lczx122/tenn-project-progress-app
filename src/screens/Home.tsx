@@ -3,7 +3,7 @@ import { supabase } from '../sync/client'
 import { useSyncStatus } from '../sync/engine'
 import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
-import { lowSupplies, overallPct, sopDoneCount, sopSteps, subconPct, transitSupplies } from '../selectors'
+import { lowSupplies, overallPct, phaseHasSubcon, phaseStatus, sopDoneCount, sopSteps, subconPct, transitSupplies } from '../selectors'
 import { fmtDayUpper, fmtShort } from '../utils/dates'
 import { todayISO } from '../utils/dates'
 
@@ -24,8 +24,8 @@ export function Home() {
     .filter((t) => t.etaISO)
     .sort((a, b) => (a.etaISO! < b.etaISO! ? -1 : 1))[0]
 
-  const inProg = p.phases.filter((ph) => ph.status === 'prog').length
-  const doneCount = p.phases.filter((ph) => ph.status === 'done').length
+  const inProg = p.phases.filter((ph) => phaseStatus(ph) === 'prog').length
+  const doneCount = p.phases.filter((ph) => phaseStatus(ph) === 'done').length
 
   const initials = p.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 
@@ -122,7 +122,7 @@ export function Home() {
             <div className="section-label" style={{ marginBottom: 8 }}>SUBCON</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {p.subcons.map((g) => {
-                const count = p.phases.filter((ph) => ph.subcon === g.name).length
+                const count = p.phases.filter((ph) => phaseHasSubcon(ph, g.name)).length
                 const pct = subconPct(p, g.name)
                 return (
                   <button key={g.name} className="card" style={{ padding: 12 }} onClick={() => ui.goPhases(g.name)}>

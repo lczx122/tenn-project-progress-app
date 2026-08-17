@@ -37,9 +37,10 @@ function set(updater: (s: AppState) => AppState) {
   onLocalChange?.()
 }
 
-/** Adopt state from the sync backend (does NOT count as a local change). */
+/** Adopt state from the sync backend (does NOT count as a local change).
+ *  Migrated too — another device may still push the old shape. */
 export function replaceState(next: AppState) {
-  state = rolloverDrafts(next)
+  state = rolloverDrafts(migrateState(next))
   emit()
   persist()
 }
@@ -94,6 +95,28 @@ async function seedReportPhotos(s: AppState): Promise<AppState> {
   return { ...s, projects: [{ ...project, reports }] }
 }
 
+/** v1 → v2: phases move from single {subcon,status,pct} to per-subcon work[]. Idempotent. */
+function migrateState(s: AppState): AppState {
+  if (s.version >= 2) return s
+  interface LegacyPhase {
+    id: string; name: string; note?: string; blocked?: boolean
+    subcon?: string; status?: 'todo' | 'prog' | 'done'; pct?: number
+    work?: { subcon: string; pct: number }[]
+  }
+  return {
+    ...s,
+    version: 2,
+    projects: s.projects.map((p) => ({
+      ...p,
+      phases: (p.phases as unknown as LegacyPhase[]).map((ph) => {
+        if (ph.work) return ph as Phase
+        const pct = ph.status === 'done' ? 100 : ph.status === 'prog' ? Math.max(ph.pct ?? 5, 1) : 0
+        return { id: ph.id, name: ph.name, note: ph.note, blocked: ph.blocked, work: [{ subcon: ph.subcon ?? '', pct }] }
+      }),
+    })),
+  }
+}
+
 /** Roll unsubmitted drafts over to today; clean up photos of stale unsubmitted drafts. */
 function rolloverDrafts(s: AppState): AppState {
   const T = todayISO()
@@ -110,7 +133,7 @@ function rolloverDrafts(s: AppState): AppState {
 export async function initStore(): Promise<void> {
   const saved = await kvGet<AppState>(STATE_KEY)
   if (saved) {
-    state = rolloverDrafts(saved)
+    state = rolloverDrafts(migrateState(saved))
   } else {
     state = rolloverDrafts(await seedReportPhotos(seedState()))
     await kvSet(STATE_KEY, state)
@@ -155,27 +178,30 @@ export const actions = {
     return id
   },
 
+  /** Start every assigned subcon at 5% (individual bumps diverge from there). */
   startPhase(phaseId: string) {
     setProject((p) => ({
       ...p,
       phases: p.phases.map((ph) =>
-        ph.id === phaseId ? { ...ph, status: 'prog', pct: 5, note: 'Started today', blocked: false } : ph,
+        ph.id === phaseId
+          ? { ...ph, work: ph.work.map((w) => ({ ...w, pct: Math.max(w.pct, 5) })), note: 'Started today', blocked: false }
+          : ph,
       ),
     }))
   },
 
-  /** +5%; at ≥100% the phase moves to Done. Returns true if it completed. */
-  bumpPhase(phaseId: string): boolean {
+  /** +5% for one subcon's work; ≥95% snaps to 100. Returns true when the whole phase completed. */
+  bumpPhaseWork(phaseId: string, subcon: string): boolean {
     let completed = false
     setProject((p) => ({
       ...p,
       phases: p.phases.map((ph) => {
         if (ph.id !== phaseId) return ph
-        if (ph.pct >= 95) {
-          completed = true
-          return { ...ph, status: 'done', pct: 100 }
-        }
-        return { ...ph, pct: ph.pct + 5 }
+        const work = ph.work.map((w) =>
+          w.subcon === subcon ? { ...w, pct: w.pct >= 95 ? 100 : w.pct + 5 } : w,
+        )
+        completed = work.length > 0 && work.every((w) => w.pct >= 100)
+        return { ...ph, work }
       }),
     }))
     return completed
@@ -272,10 +298,10 @@ export const actions = {
   },
 
   // ---- master-data editing ----
-  addPhase(name: string, subcon: string) {
+  addPhase(name: string, subcons: string[]) {
     setProject((p) => ({
       ...p,
-      phases: [...p.phases, { id: `ph${Date.now()}`, name, subcon, status: 'todo', pct: 0 }],
+      phases: [...p.phases, { id: `ph${Date.now()}`, name, work: subcons.map((s) => ({ subcon: s, pct: 0 })) }],
     }))
   },
 
@@ -358,7 +384,10 @@ export const actions = {
       return {
         ...p,
         subcons: p.subcons.map((s) => (s.name === oldName ? { name, trade } : s)),
-        phases: p.phases.map((ph) => (ph.subcon === oldName ? { ...ph, subcon: name } : ph)),
+        phases: p.phases.map((ph) => ({
+          ...ph,
+          work: ph.work.map((w) => (w.subcon === oldName ? { ...w, subcon: name } : w)),
+        })),
         supplies: p.supplies.map((su) => (su.usedBy === oldName ? { ...su, usedBy: name } : su)),
         draft: { ...p.draft, man },
       }
@@ -368,7 +397,7 @@ export const actions = {
   /** Returns false when the subcontractor is still referenced by phases or supplies. */
   deleteSubcon(name: string): boolean {
     const p = activeProject(getState())
-    if (p.phases.some((ph) => ph.subcon === name) || p.supplies.some((su) => su.usedBy === name)) {
+    if (p.phases.some((ph) => ph.work.some((w) => w.subcon === name)) || p.supplies.some((su) => su.usedBy === name)) {
       return false
     }
     setProject((pr) => {
