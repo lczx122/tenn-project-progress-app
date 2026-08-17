@@ -3,6 +3,8 @@
 import type { AppState, Draft, Project, Subcon } from './types'
 import { addDays, todayISO } from './utils/dates'
 
+export const DEFAULT_WHATSAPP_URL = 'https://chat.whatsapp.com/G6L2erZVMP12ivZerciRFs'
+
 export const SUBCONS: Subcon[] = [
   { name: 'Classic Home', trade: 'Carpentry' },
   { name: 'Fanmuli 定制', trade: 'Custom joinery' },
@@ -28,6 +30,7 @@ export function newProject(id: string, name: string, targetDateISO: string): Pro
     id,
     name,
     targetDateISO,
+    whatsappUrl: '',
     subcons: [],
     phases: [],
     supplies: [],
@@ -46,6 +49,7 @@ export function seedState(): AppState {
     id: 'p1',
     name: 'Faithview Gallery',
     targetDateISO: d(49),
+    whatsappUrl: DEFAULT_WHATSAPP_URL,
     subcons: SUBCONS,
     nextPo: 1052,
     phases: [
@@ -162,5 +166,5 @@ export function seedState(): AppState {
     draft: emptyDraft(SUBCONS),
   }
 
-  return { version: 2, projects: [project], activeProjectId: 'p1' }
+  return { version: 3, projects: [project], activeProjectId: 'p1' }
 }

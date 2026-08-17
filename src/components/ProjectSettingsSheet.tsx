@@ -14,13 +14,14 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
 
   const [name, setName] = useState(p.name)
   const [target, setTarget] = useState(p.targetDateISO)
+  const [waUrl, setWaUrl] = useState(p.whatsappUrl ?? '')
   // subcon being edited: '' = none, '+' = adding new, otherwise the original name
   const [editingSub, setEditingSub] = useState('')
   const [subName, setSubName] = useState('')
   const [subTrade, setSubTrade] = useState('')
 
   const saveMeta = (close: () => void) => {
-    actions.updateProjectMeta(name.trim() || p.name, target)
+    actions.updateProjectMeta(name.trim() || p.name, target, waUrl.trim())
     ui.showToast('Project updated')
     close()
   }
@@ -62,6 +63,16 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
         <Field label="Target completion date">
           <input className="text-input" type="date" value={target} onChange={(e) => setTarget(e.target.value)} />
         </Field>
+        <TextField
+          label="WhatsApp group link"
+          value={waUrl}
+          onChange={setWaUrl}
+          type="url"
+          placeholder="https://chat.whatsapp.com/…"
+        />
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+          Used by the floating chat button — leave empty to hide it.
+        </div>
 
         <div className="section-label" style={{ marginTop: 18 }}>SUBCONTRACTORS</div>
         {p.subcons.map((g) =>

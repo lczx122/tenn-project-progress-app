@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import type { AppState, DrawingSet, Phase, Project, Report, Supply } from './types'
 import { deleteDatabase, kvGet, kvSet, photoDelete, photoPut } from './db'
-import { emptyDraft, newProject, seedState } from './seed'
+import { DEFAULT_WHATSAPP_URL, emptyDraft, newProject, seedState } from './seed'
 import { addDays, todayISO } from './utils/dates'
 
 const STATE_KEY = 'app-state'
@@ -95,26 +95,38 @@ async function seedReportPhotos(s: AppState): Promise<AppState> {
   return { ...s, projects: [{ ...project, reports }] }
 }
 
-/** v1 → v2: phases move from single {subcon,status,pct} to per-subcon work[]. Idempotent. */
+/** Schema migrations — idempotent, applied to local state and states adopted from sync. */
 function migrateState(s: AppState): AppState {
-  if (s.version >= 2) return s
-  interface LegacyPhase {
-    id: string; name: string; note?: string; blocked?: boolean
-    subcon?: string; status?: 'todo' | 'prog' | 'done'; pct?: number
-    work?: { subcon: string; pct: number }[]
+  let out = s
+  // v1 → v2: phases move from single {subcon,status,pct} to per-subcon work[]
+  if (out.version < 2) {
+    interface LegacyPhase {
+      id: string; name: string; note?: string; blocked?: boolean
+      subcon?: string; status?: 'todo' | 'prog' | 'done'; pct?: number
+      work?: { subcon: string; pct: number }[]
+    }
+    out = {
+      ...out,
+      version: 2,
+      projects: out.projects.map((p) => ({
+        ...p,
+        phases: (p.phases as unknown as LegacyPhase[]).map((ph) => {
+          if (ph.work) return ph as Phase
+          const pct = ph.status === 'done' ? 100 : ph.status === 'prog' ? Math.max(ph.pct ?? 5, 1) : 0
+          return { id: ph.id, name: ph.name, note: ph.note, blocked: ph.blocked, work: [{ subcon: ph.subcon ?? '', pct }] }
+        }),
+      })),
+    }
   }
-  return {
-    ...s,
-    version: 2,
-    projects: s.projects.map((p) => ({
-      ...p,
-      phases: (p.phases as unknown as LegacyPhase[]).map((ph) => {
-        if (ph.work) return ph as Phase
-        const pct = ph.status === 'done' ? 100 : ph.status === 'prog' ? Math.max(ph.pct ?? 5, 1) : 0
-        return { id: ph.id, name: ph.name, note: ph.note, blocked: ph.blocked, work: [{ subcon: ph.subcon ?? '', pct }] }
-      }),
-    })),
+  // v2 → v3: per-project WhatsApp group link (existing projects keep the original group)
+  if (out.version < 3) {
+    out = {
+      ...out,
+      version: 3,
+      projects: out.projects.map((p) => ({ ...p, whatsappUrl: p.whatsappUrl ?? DEFAULT_WHATSAPP_URL })),
+    }
   }
+  return out
 }
 
 /** Roll unsubmitted drafts over to today; clean up photos of stale unsubmitted drafts. */
@@ -359,8 +371,8 @@ export const actions = {
     }))
   },
 
-  updateProjectMeta(name: string, targetDateISO: string) {
-    setProject((p) => ({ ...p, name, targetDateISO }))
+  updateProjectMeta(name: string, targetDateISO: string, whatsappUrl: string) {
+    setProject((p) => ({ ...p, name, targetDateISO, whatsappUrl }))
   },
 
   addSubcon(name: string, trade: string) {

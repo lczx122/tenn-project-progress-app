@@ -97,6 +97,8 @@ export interface Project {
   id: string
   name: string
   targetDateISO: string
+  /** Team chat link for the floating WhatsApp button; empty hides the button. */
+  whatsappUrl?: string
   subcons: Subcon[]
   phases: Phase[]
   supplies: Supply[]

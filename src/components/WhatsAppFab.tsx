@@ -1,16 +1,17 @@
 import { useUi } from '../ui'
+import { activeProject, useAppState } from '../store'
 
-const WHATSAPP_GROUP = 'https://chat.whatsapp.com/G6L2erZVMP12ivZerciRFs'
-
-/** Floating button that opens the site team's WhatsApp group. */
+/** Floating button that opens the project's WhatsApp group (editable in project settings). */
 export function WhatsAppFab() {
   const ui = useUi()
+  const s = useAppState()
+  const url = activeProject(s).whatsappUrl?.trim()
   // only on the main tab screens — keeps pushed views (detail, drawings, viewer) clean
-  if (ui.stack.length > 0) return null
+  if (ui.stack.length > 0 || !url) return null
   return (
     <a
       className="wa-fab pressable"
-      href={WHATSAPP_GROUP}
+      href={url}
       target="_blank"
       rel="noreferrer"
       aria-label="Open WhatsApp group chat"
