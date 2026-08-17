@@ -126,8 +126,12 @@ await page.waitForTimeout(500)
 check('drawing: link to phase tag', await page.isVisible('.card-hero:has-text("audit") >> text=Pantry'))
 
 await page.click('.card-hero:has-text("Sales Gallery") >> text=Open >> nth=0')
-await page.waitForTimeout(1200)
-check('drawing: PDF viewer opens', await page.isVisible('.viewer iframe'))
+await page.waitForSelector('.viewer canvas', { timeout: 20000 })
+await page.waitForFunction(() => {
+  const c = document.querySelector('.viewer canvas')
+  return c && c.width > 100
+}, { timeout: 20000 })
+check('drawing: PDF renders via pdf.js', true)
 await page.click('.viewer .back-chevron')
 await page.waitForTimeout(1200)
 check('drawing: viewer dismisses', await gone('.viewer'))
