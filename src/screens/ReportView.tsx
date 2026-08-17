@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { ChevronLeft, Share2 } from 'lucide-react'
-import { activeProject, useAppState } from '../store'
+import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { fmtDay } from '../utils/dates'
 import { usePhotoUrl } from '../utils/photos'
+import { ConfirmButton } from '../components/form'
 import { manTotal } from './historyUtils'
 
 function Photo({ id }: { id: string }) {
@@ -103,6 +104,14 @@ export function ReportView({ reportId }: { reportId: string }) {
         <button className="primary-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14, borderRadius: 12, fontSize: 15 }} onClick={share} disabled={sharing}>
           <Share2 size={16} /> {sharing ? 'Preparing PDF…' : 'Share PDF'}
         </button>
+        <ConfirmButton
+          label="Delete report"
+          onConfirm={() => {
+            actions.deleteReport(r.id)
+            ui.showToast(`Report ${fmtDay(r.dateISO)} deleted`)
+            ui.pop()
+          }}
+        />
       </div>
     </>
   )

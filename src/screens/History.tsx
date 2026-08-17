@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { activeProject, useAppState } from '../store'
+import { useEffect, useRef, useState } from 'react'
+import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { fmtDay, fmtMonthYear, fromISO, isWeekend, manTotal, toISO, todayISO } from './historyUtils'
 import type { Report } from '../types'
@@ -9,6 +9,23 @@ export function History() {
   const ui = useUi()
   const p = activeProject(s)
   const [sharing, setSharing] = useState<string | null>(null)
+  // report id armed for deletion (second tap confirms)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const confirmTimer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(() => () => clearTimeout(confirmTimer.current), [])
+
+  const onDelete = (r: Report) => {
+    if (confirmDelete === r.id) {
+      clearTimeout(confirmTimer.current)
+      setConfirmDelete(null)
+      actions.deleteReport(r.id)
+      ui.showToast(`Report ${fmtDay(r.dateISO)} deleted`)
+    } else {
+      setConfirmDelete(r.id)
+      clearTimeout(confirmTimer.current)
+      confirmTimer.current = setTimeout(() => setConfirmDelete(null), 3000)
+    }
+  }
 
   const T = todayISO()
   const byDate = new Map(p.reports.map((r) => [r.dateISO, r]))
@@ -93,10 +110,17 @@ export function History() {
               <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {r.photoIds.length} photos · {manTotal(r)} workers · {r.summary}
               </div>
-              <div style={{ display: 'flex', gap: 14, marginTop: 10 }}>
+              <div style={{ display: 'flex', gap: 14, marginTop: 10, alignItems: 'center' }}>
                 <button className="link-btn" onClick={() => ui.push({ type: 'reportView', reportId: r.id })}>View report</button>
                 <button className="link-btn" onClick={() => share(r)} disabled={sharing === r.id}>
                   {sharing === r.id ? 'Preparing…' : 'Share PDF ↗'}
+                </button>
+                <button
+                  className="link-btn"
+                  style={{ marginLeft: 'auto', color: 'var(--danger)', fontWeight: confirmDelete === r.id ? 700 : 600 }}
+                  onClick={() => onDelete(r)}
+                >
+                  {confirmDelete === r.id ? 'Tap to confirm' : 'Delete'}
                 </button>
               </div>
             </div>

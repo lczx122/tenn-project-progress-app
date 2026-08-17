@@ -176,6 +176,16 @@ await drag(8, 400, 300, 400, 14, 12)
 await page.waitForTimeout(900)
 check('gesture: edge-swipe pops detail', await gone('.pushed-layer'))
 
+// ---------- History: delete a report ----------
+await page.click('nav >> text=History')
+await page.waitForTimeout(400)
+const cardsBefore = await page.locator('.card:has-text("View report")').count()
+await page.click('.card:has-text("View report") >> nth=0 >> text=Delete')
+await page.click('.card:has-text("View report") >> nth=0 >> text=Tap to confirm')
+await page.waitForTimeout(2600)
+const cardsAfter = await page.locator('.card:has-text("View report")').count()
+check('report: delete from history', cardsAfter === cardsBefore - 1)
+
 // ---------- Reset restores demo ----------
 await page.click('nav >> text=Home')
 await page.click('button:has-text("Faithview Gallery")')

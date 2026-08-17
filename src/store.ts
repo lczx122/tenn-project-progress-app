@@ -400,6 +400,20 @@ export const actions = {
     location.reload()
   },
 
+  /** Remove a report and its photos; deleting today's report re-opens the daily draft. */
+  deleteReport(reportId: string) {
+    setProject((p) => {
+      const r = p.reports.find((x) => x.id === reportId)
+      if (!r) return p
+      r.photoIds.forEach((id) => photoDelete(id).catch(() => {}))
+      return {
+        ...p,
+        reports: p.reports.filter((x) => x.id !== reportId),
+        draft: r.dateISO === todayISO() ? emptyDraft(p.subcons) : p.draft,
+      }
+    })
+  },
+
   addDrawing(set_: DrawingSet) {
     setProject((p) => ({ ...p, drawings: [...p.drawings, set_] }))
   },
