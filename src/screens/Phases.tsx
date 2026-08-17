@@ -3,6 +3,7 @@ import { Pencil } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { PhaseEditSheet } from '../components/PhaseEditSheet'
+import { haptic } from '../utils/motion'
 import type { Phase } from '../types'
 
 export function Phases() {
@@ -22,7 +23,10 @@ export function Phases() {
 
   const bump = (ph: Phase) => {
     const completed = actions.bumpPhase(ph.id)
-    if (completed) ui.showToast(`${ph.name} marked done 🎉`)
+    if (completed) {
+      haptic([12, 60, 12])
+      ui.showToast(`${ph.name} marked done 🎉`)
+    }
   }
 
   return (
@@ -129,6 +133,7 @@ export function Phases() {
         )}
 
         <button
+          className="pressable"
           style={{ border: '1.5px dashed #C9C4BA', borderRadius: 12, padding: 14, textAlign: 'center', color: 'var(--teal)', fontSize: 13, fontWeight: 600, width: '100%' }}
           onClick={() => setEditing('')}
         >

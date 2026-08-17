@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { ChipSelect, ConfirmButton, TextField } from './form'
+import { Sheet } from './Sheet'
 import type { PhaseStatus } from '../types'
 
 const STATUS_LABELS: Record<PhaseStatus, string> = { todo: 'Not started', prog: 'In progress', done: 'Done' }
@@ -20,7 +21,7 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
   const [note, setNote] = useState(existing?.note ?? '')
   const [blocked, setBlocked] = useState(existing?.blocked ?? false)
 
-  const save = () => {
+  const save = (close: () => void) => {
     const patch = {
       name: name.trim(),
       subcon,
@@ -36,12 +37,13 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
       actions.addPhase(patch.name, subcon)
       ui.showToast(`${patch.name} added`)
     }
-    onClose()
+    close()
   }
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClosed={onClose}>
+      {(close) => (
+        <>
         <div style={{ fontSize: 16, fontWeight: 700 }}>{existing ? 'Edit phase' : 'Add phase'}</div>
 
         <TextField label="Phase name" value={name} onChange={setName} placeholder="e.g. Backdrop 05" />
@@ -90,7 +92,7 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-          <button className="primary-btn" disabled={!name.trim() || !subcon} onClick={save}>
+          <button className="primary-btn" disabled={!name.trim() || !subcon} onClick={() => save(close)}>
             {existing ? 'Save changes' : 'Add phase'}
           </button>
           {existing && (
@@ -99,12 +101,13 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
               onConfirm={() => {
                 actions.deletePhase(existing.id)
                 ui.showToast(`${existing.name} deleted`)
-                onClose()
+                close()
               }}
             />
           )}
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Sheet>
   )
 }

@@ -4,6 +4,7 @@ import { actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { addDays, todayISO } from '../utils/dates'
 import { ProjectSettingsSheet } from './ProjectSettingsSheet'
+import { Sheet } from './Sheet'
 
 export function ProjectSwitcher() {
   const s = useAppState()
@@ -15,7 +16,7 @@ export function ProjectSwitcher() {
 
   if (!ui.switcherOpen) return null
 
-  const close = () => {
+  const unmount = () => {
     ui.setSwitcherOpen(false)
     setCreating(false)
     setSettingsOpen(false)
@@ -23,12 +24,13 @@ export function ProjectSwitcher() {
   }
 
   if (settingsOpen) {
-    return <ProjectSettingsSheet onClose={close} />
+    return <ProjectSettingsSheet onClose={unmount} />
   }
 
   return (
-    <div className="sheet-backdrop" onClick={close}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClosed={unmount}>
+      {(close) => (
+        <>
         <div style={{ fontSize: 16, fontWeight: 700 }}>Projects</div>
         {s.projects.map((p) => (
           <div key={p.id} className={`sheet-row ${p.id === s.activeProjectId ? 'active' : ''}`} style={{ padding: 0 }}>
@@ -97,7 +99,8 @@ export function ProjectSwitcher() {
             </button>
           </div>
         )}
-      </div>
-    </div>
+        </>
+      )}
+    </Sheet>
   )
 }

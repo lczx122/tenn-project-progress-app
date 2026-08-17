@@ -9,11 +9,13 @@ export type Pushed =
   | { type: 'pdfViewer'; drawingId: string }
   | { type: 'reportView'; reportId: string }
 
+export type StackItem = Pushed & { key: number }
+
 export type SupplyFilter = 'all' | 'low' | 'transit'
 
 interface UiState {
   tab: Tab
-  stack: Pushed[]
+  stack: StackItem[]
   phaseFilter: string
   supplyFilter: SupplyFilter
   query: string
@@ -33,9 +35,11 @@ interface UiState {
 
 const UiContext = createContext<UiState | null>(null)
 
+let nextStackKey = 1
+
 export function UiProvider({ children }: { children: ReactNode }) {
   const [tab, setTab] = useState<Tab>('home')
-  const [stack, setStack] = useState<Pushed[]>([])
+  const [stack, setStack] = useState<StackItem[]>([])
   const [phaseFilter, setPhaseFilter] = useState('All')
   const [supplyFilter, setSupplyFilter] = useState<SupplyFilter>('all')
   const [query, setQuery] = useState('')
@@ -54,7 +58,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
     setStack([])
   }, [])
 
-  const push = useCallback((v: Pushed) => setStack((s) => [...s, v]), [])
+  const push = useCallback((v: Pushed) => setStack((s) => [...s, { ...v, key: nextStackKey++ }]), [])
   const pop = useCallback(() => setStack((s) => s.slice(0, -1)), [])
 
   const goSupplies = useCallback((filter: SupplyFilter) => {

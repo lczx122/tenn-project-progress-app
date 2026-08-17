@@ -5,6 +5,8 @@ import { useUi } from '../ui'
 import { manTotal, requiredStepsOk, sopDoneCount, sopSteps } from '../selectors'
 import { fmtDay, todayISO } from '../utils/dates'
 import { storePhotoFile, usePhotoUrl } from '../utils/photos'
+import { haptic } from '../utils/motion'
+import { Sheet } from '../components/Sheet'
 
 const MAX_PHOTOS = 6
 
@@ -85,6 +87,7 @@ export function Report() {
       return
     }
     actions.submitReport()
+    haptic([12, 60, 12])
     ui.showToast('Report submitted · stock updated')
     ui.goTab('history')
   }
@@ -249,27 +252,29 @@ export function Report() {
 
       {/* Material picker sheet */}
       {matPickerOpen && (
-        <div className="sheet-backdrop" onClick={() => setMatPickerOpen(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>Add material</div>
-            <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Only materials with on-site stock</div>
-            {available.map((su) => (
-              <button
-                key={su.id}
-                className="sheet-row"
-                onClick={() => {
-                  actions.draftAddMat(su.id, su.unit === 'm' ? 5 : 1)
-                  setMatPickerOpen(false)
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{su.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{su.stock} {su.unit} on site</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+        <Sheet onClosed={() => setMatPickerOpen(false)}>
+          {(close) => (
+            <>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Add material</div>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Only materials with on-site stock</div>
+              {available.map((su) => (
+                <button
+                  key={su.id}
+                  className="sheet-row"
+                  onClick={() => {
+                    actions.draftAddMat(su.id, su.unit === 'm' ? 5 : 1)
+                    close()
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{su.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{su.stock} {su.unit} on site</div>
+                  </div>
+                </button>
+              ))}
+            </>
+          )}
+        </Sheet>
       )}
     </>
   )

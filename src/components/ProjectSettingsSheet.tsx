@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { ConfirmButton, Field, TextField } from './form'
+import { Sheet } from './Sheet'
 import { SyncSection } from './SyncSection'
 
 export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
@@ -17,10 +18,10 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
   const [subName, setSubName] = useState('')
   const [subTrade, setSubTrade] = useState('')
 
-  const saveMeta = () => {
+  const saveMeta = (close: () => void) => {
     actions.updateProjectMeta(name.trim() || p.name, target)
     ui.showToast('Project updated')
-    onClose()
+    close()
   }
 
   const startEditSub = (orig: string, trade: string) => {
@@ -51,8 +52,9 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClosed={onClose}>
+      {(close) => (
+        <>
         <div style={{ fontSize: 16, fontWeight: 700 }}>Project settings</div>
 
         <TextField label="Project name" value={name} onChange={setName} />
@@ -105,14 +107,14 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
         <SyncSection />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 18 }}>
-          <button className="primary-btn" onClick={saveMeta}>Save project</button>
+          <button className="primary-btn" onClick={() => saveMeta(close)}>Save project</button>
           {s.projects.length > 1 && (
             <ConfirmButton
               label="Delete this project"
               onConfirm={() => {
                 actions.deleteProject(p.id)
                 ui.showToast(`${p.name} deleted`)
-                onClose()
+                close()
                 ui.goTab('home')
               }}
             />
@@ -127,7 +129,8 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
             Reset wipes all projects, reports and photos on this device and restores the demo data.
           </div>
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Sheet>
   )
 }

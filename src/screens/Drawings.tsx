@@ -6,6 +6,7 @@ import { fmtFull, todayISO } from '../utils/dates'
 import { fileGet, filePut } from '../db'
 import { assetUrl } from '../utils/base'
 import { enqueueUpload, fetchRemoteBlob } from '../sync/engine'
+import { Sheet } from '../components/Sheet'
 import type { DrawingSet } from '../types'
 
 async function countPdfPages(file: File): Promise<number> {
@@ -132,26 +133,28 @@ export function Drawings() {
 
       {/* Link-to-phase sheet */}
       {linking && (
-        <div className="sheet-backdrop" onClick={() => setLinking(null)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>Link to phase</div>
-            <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Tap to add or remove a phase tag</div>
-            {p.phases.map((ph) => {
-              const ds = p.drawings.find((d) => d.id === linking)
-              const active = !!ds?.tags.includes(ph.name)
-              return (
-                <button
-                  key={ph.id}
-                  className={`sheet-row ${active ? 'active' : ''}`}
-                  onClick={() => actions.linkDrawingPhase(linking, ph.name)}
-                >
-                  <div style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{ph.name}</div>
-                  {active && <div style={{ color: 'var(--teal)', fontWeight: 700 }}>✓</div>}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <Sheet onClosed={() => setLinking(null)}>
+          {() => (
+            <>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Link to phase</div>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Tap to add or remove a phase tag</div>
+              {p.phases.map((ph) => {
+                const ds = p.drawings.find((d) => d.id === linking)
+                const active = !!ds?.tags.includes(ph.name)
+                return (
+                  <button
+                    key={ph.id}
+                    className={`sheet-row ${active ? 'active' : ''}`}
+                    onClick={() => actions.linkDrawingPhase(linking, ph.name)}
+                  >
+                    <div style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{ph.name}</div>
+                    {active && <div style={{ color: 'var(--teal)', fontWeight: 700 }}>✓</div>}
+                  </button>
+                )
+              })}
+            </>
+          )}
+        </Sheet>
       )}
     </>
   )

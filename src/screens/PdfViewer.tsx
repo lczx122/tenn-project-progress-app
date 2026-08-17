@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronLeft, ExternalLink } from 'lucide-react'
 import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
 import { fileGet } from '../db'
 import { assetUrl } from '../utils/base'
 import { fetchRemoteBlob } from '../sync/engine'
+import { createSpring, prefersReducedMotion, type Spring } from '../utils/motion'
 
 export function PdfViewer({ drawingId }: { drawingId: string }) {
   const s = useAppState()
@@ -13,6 +14,31 @@ export function PdfViewer({ drawingId }: { drawingId: string }) {
   const ds = p.drawings.find((d) => d.id === drawingId)
   const [url, setUrl] = useState<string | null>(null)
   const [isImage, setIsImage] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const springRef = useRef<Spring | null>(null)
+
+  // enters from the bottom; dismisses back the way it came (spatial consistency)
+  useLayoutEffect(() => {
+    const el = rootRef.current
+    if (!el || prefersReducedMotion()) return
+    const h = el.offsetHeight || 800
+    const spring = createSpring(h, (y) => {
+      el.style.transform = `translateY(${y}px)`
+    })
+    springRef.current = spring
+    el.style.transform = `translateY(${h}px)`
+    spring.to(0, { damping: 1, response: 0.35 })
+  }, [])
+
+  const dismiss = () => {
+    const el = rootRef.current
+    const spring = springRef.current
+    if (!el || !spring || prefersReducedMotion()) {
+      ui.pop()
+      return
+    }
+    spring.to(el.offsetHeight || 800, { damping: 1, response: 0.3 }, () => ui.pop())
+  }
 
   useEffect(() => {
     let objectUrl: string | null = null
@@ -40,9 +66,9 @@ export function PdfViewer({ drawingId }: { drawingId: string }) {
   if (!ds) return null
 
   return (
-    <div className="viewer">
+    <div className="viewer" ref={rootRef}>
       <div className="viewer-head">
-        <button className="back-chevron" onClick={ui.pop} aria-label="Back">
+        <button className="back-chevron" onClick={dismiss} aria-label="Back">
           <ChevronLeft size={22} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>

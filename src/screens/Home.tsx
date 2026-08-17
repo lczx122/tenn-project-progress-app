@@ -70,6 +70,7 @@ export function Home() {
       <div style={{ padding: '0 20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {/* SOP card */}
         <button
+          className="pressable"
           style={{ background: 'var(--teal)', borderRadius: 16, padding: 16, color: '#fff', width: '100%' }}
           onClick={() => ui.goTab('report')}
         >
@@ -140,6 +141,7 @@ export function Home() {
         {/* Low stock alert */}
         {low.length > 0 && (
           <button
+            className="pressable"
             style={{
               background: 'var(--warn-bg)', border: '1px solid var(--warn-bd)', borderRadius: 12, padding: '12px 14px',
               display: 'flex', gap: 10, alignItems: 'center', width: '100%',

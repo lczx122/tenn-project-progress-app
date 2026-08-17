@@ -59,19 +59,35 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
   max-width: 430px;
   margin: 0 auto;
   background: var(--bg);
-  display: flex;
-  flex-direction: column;
   position: relative;
   overflow: hidden;
 }
-.screen { flex: 1; overflow-y: auto; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; }
+
+/* Layered navigation stack — pushed views slide over the base, content scrolls under the tab bar */
+.stack-area { position: absolute; inset: 0; overflow: hidden; }
+.stack-base { position: absolute; inset: 0; will-change: transform; }
+.stack-holder { position: absolute; inset: 0; }
+.pushed-layer {
+  position: absolute; inset: 0; background: var(--bg);
+  will-change: transform;
+  box-shadow: -12px 0 32px rgba(27, 31, 30, 0.12);
+  touch-action: pan-y;
+}
+.pushed-layer.rm-exit { opacity: 0; transition: opacity 180ms ease; }
+
+.screen {
+  height: 100%; overflow-y: auto; display: flex; flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom, 12px));
+}
 
 .mono { font-family: var(--mono); font-weight: 500; }
 
 /* ---- shared ---- */
 .card { background: var(--card); border: 1px solid var(--card-bd); border-radius: 12px; padding: 14px; }
 .card-hero { background: var(--card); border: 1px solid var(--card-bd); border-radius: 16px; padding: 16px; }
-.screen-title { font-size: 24px; font-weight: 700; color: var(--ink); }
+/* large text tightens (size-specific tracking); body stays near 0 */
+.screen-title { font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
 .section-label { font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: 0.05em; }
 .bar { background: var(--fill); border-radius: 99px; overflow: hidden; }
 .bar > div { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.25s ease; }
@@ -89,10 +105,14 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
 
 .link-btn { font-size: 13px; font-weight: 600; color: var(--teal); cursor: pointer; }
 
-/* ---- tab bar ---- */
+/* ---- tab bar: translucent chrome, content scrolls underneath ---- */
 .tabbar {
-  display: flex; border-top: 1px solid var(--card-bd); background: var(--tabbar);
-  padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 12px)); flex-shrink: 0;
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; border-top: 1px solid rgba(228, 226, 221, 0.6);
+  background: rgba(252, 251, 249, 0.78);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 12px));
 }
 .tabbar button { flex: 1; text-align: center; color: var(--muted); min-height: 44px; }
 .tabbar button.active { color: var(--teal); }
@@ -100,23 +120,35 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
 
 /* ---- toast ---- */
 .toast {
-  position: absolute; bottom: 92px; left: 20px; right: 20px; background: var(--toast); color: #fff;
+  position: absolute; bottom: 92px; left: 20px; right: 20px;
+  background: rgba(27, 31, 30, 0.92); color: #fff;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border-radius: 12px; padding: 12px 16px; font-size: 13px; font-weight: 500; text-align: center;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); z-index: 99; animation: toast-in 0.18s ease;
 }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-/* ---- sheets ---- */
+/* ---- sheets (position/opacity driven by springs in Sheet.tsx) ---- */
 .sheet-backdrop {
   position: absolute; inset: 0; background: rgba(27, 31, 30, 0.4); z-index: 50;
-  display: flex; align-items: flex-end; animation: fade-in 0.15s ease;
+  display: flex; align-items: flex-end;
 }
 .sheet {
-  background: #fff; border-radius: 16px 16px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 12px));
-  width: 100%; animation: sheet-up 0.2s ease; max-height: 75%; overflow-y: auto;
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 16px 16px 0 0; padding: 6px 20px calc(20px + env(safe-area-inset-bottom, 12px));
+  width: 100%; max-height: 80%; overflow-y: auto;
+  will-change: transform;
+  box-shadow: 0 -12px 40px rgba(27, 31, 30, 0.18);
 }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes sheet-up { from { transform: translateY(24px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+.sheet-grab {
+  display: flex; justify-content: center; padding: 8px 0 10px; margin: 0 -20px;
+  cursor: grab; touch-action: none;
+}
+.sheet-grab:active { cursor: grabbing; }
+.sheet-grabber { width: 36px; height: 5px; border-radius: 99px; background: var(--empty); }
 
 .sheet-row {
   display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--card-bd);
@@ -154,6 +186,37 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .pulse { animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.4; } }
+
+/* ---- press feedback: instant, on pointer-down ---- */
+button { touch-action: manipulation; }
+button.card, .chip, .primary-btn, .stepper-btn, .sheet-row, .tabbar button, .link-btn, .pressable {
+  transition: transform 180ms ease-out;
+}
+button.card:active, .chip:active, .primary-btn:active, .stepper-btn:active, .sheet-row:active, .link-btn:active, .pressable:active {
+  transform: scale(0.97);
+  transition: transform 80ms ease-out;
+}
+.tabbar button:active { transform: scale(0.92); transition: transform 80ms ease-out; }
+
+/* ---- reduced motion: gentle non-vestibular equivalents ---- */
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+  .spin, .pulse { animation: none; }
+  button.card:active, .chip:active, .primary-btn:active, .stepper-btn:active,
+  .sheet-row:active, .link-btn:active, .tabbar button:active, .pressable:active { transform: none; }
+  .bar > div { transition: none; }
+}
+
+/* ---- reduced transparency / high contrast: frostier, solid chrome ---- */
+@media (prefers-reduced-transparency: reduce) {
+  .tabbar { background: var(--tabbar); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .sheet { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .toast { background: var(--toast); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .tabbar { background: var(--tabbar); border-top-color: var(--ink); }
+  .sheet { background: #fff; }
+}
 
 /* larger view on desktop keeps a phone-ish column */
 @media (min-width: 500px) {

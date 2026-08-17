@@ -68,6 +68,7 @@ export function Supplies() {
           return (
             <button
               key={su.id}
+              className="pressable"
               style={{
                 background: '#fff', border: `1.5px solid ${low && !su.ordered ? 'var(--warn-bd)' : 'var(--card-bd)'}`,
                 borderRadius: 12, padding: 14, width: '100%',
@@ -99,6 +100,7 @@ export function Supplies() {
         )}
 
         <button
+          className="pressable"
           style={{ border: '1.5px dashed #C9C4BA', borderRadius: 12, padding: 14, textAlign: 'center', color: 'var(--teal)', fontSize: 13, fontWeight: 600, width: '100%' }}
           onClick={() => setAdding(true)}
         >

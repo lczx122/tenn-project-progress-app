@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { ChipSelect, ConfirmButton, NumField, TextField, parseNum } from './form'
+import { Sheet } from './Sheet'
 
 /** Add (no supplyId) or edit (supplyId) a supply item. */
 export function SupplyEditSheet({ supplyId, onClose }: { supplyId?: string; onClose: () => void }) {
@@ -23,7 +24,7 @@ export function SupplyEditSheet({ supplyId, onClose }: { supplyId?: string; onCl
   const [supPhone, setSupPhone] = useState(existing?.supplier.phone ?? '')
   const [supNote, setSupNote] = useState(existing?.supplier.note ?? '')
 
-  const save = () => {
+  const save = (close: () => void) => {
     const stockN = parseNum(stock)
     const maxN = Math.max(parseNum(max), stockN, 1)
     const fields = {
@@ -45,12 +46,13 @@ export function SupplyEditSheet({ supplyId, onClose }: { supplyId?: string; onCl
       actions.addSupply(fields)
       ui.showToast(`${fields.name} added`)
     }
-    onClose()
+    close()
   }
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClosed={onClose}>
+      {(close) => (
+        <>
         <div style={{ fontSize: 16, fontWeight: 700 }}>{existing ? 'Edit supply' : 'Add supply'}</div>
 
         <TextField label="Material name" value={name} onChange={setName} placeholder="e.g. Plywood 18mm" />
@@ -77,7 +79,7 @@ export function SupplyEditSheet({ supplyId, onClose }: { supplyId?: string; onCl
         <TextField label="Supplier note" value={supNote} onChange={setSupNote} placeholder="e.g. Lead time 2–3 days" />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-          <button className="primary-btn" disabled={!name.trim()} onClick={save}>
+          <button className="primary-btn" disabled={!name.trim()} onClick={() => save(close)}>
             {existing ? 'Save changes' : 'Add supply'}
           </button>
           {existing && (
@@ -86,13 +88,14 @@ export function SupplyEditSheet({ supplyId, onClose }: { supplyId?: string; onCl
               onConfirm={() => {
                 actions.deleteSupply(existing.id)
                 ui.showToast(`${existing.name} deleted`)
-                onClose()
+                close()
                 ui.pop()
               }}
             />
           )}
         </div>
-      </div>
-    </div>
+        </>
+      )}
+    </Sheet>
   )
 }

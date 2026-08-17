@@ -5,6 +5,7 @@ import { useUi } from '../ui'
 import { isLow } from '../selectors'
 import { fmtShort } from '../utils/dates'
 import { SupplyEditSheet } from '../components/SupplyEditSheet'
+import { haptic } from '../utils/motion'
 
 export function SupplyDetail({ id }: { id: string }) {
   const s = useAppState()
@@ -67,6 +68,7 @@ export function SupplyDetail({ id }: { id: string }) {
             style={{ background: 'var(--teal)', color: '#fff', borderRadius: 12, textAlign: 'center', padding: 14, fontWeight: 600, fontSize: 15, width: '100%' }}
             onClick={() => {
               actions.reorderSupply(su.id)
+              haptic(10)
               ui.showToast(`Order sent to ${su.supplier.name}`)
             }}
           >
