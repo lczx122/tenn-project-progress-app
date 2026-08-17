@@ -53,6 +53,15 @@ await page.click('.card:has-text("Audit Phase") button:has-text("+5%")')
 await page.waitForTimeout(200)
 check('phase: +5% bump', await page.isVisible('.card:has-text("Audit Phase") >> text=10%'))
 
+// exact % via number box and slider (steppers still work — used above)
+await page.locator('button[aria-label="Edit Audit Phase"]').click()
+await page.waitForTimeout(500)
+await page.fill('input[aria-label="Ah Kang percent"]', '47')
+check('phase: slider present', await page.isVisible('input[aria-label="Ah Kang progress slider"]'))
+await page.click('.sheet button:has-text("Save changes")')
+await page.waitForTimeout(600)
+check('phase: exact % via number box', await page.isVisible('.card:has-text("Audit Phase") >> text=47%'))
+
 // multi-subcon phase: Pantry has Ah Kang 30% + Classic Home 15%, tracked separately
 const pantry = page.locator('.card:has-text("Pantry")')
 check(

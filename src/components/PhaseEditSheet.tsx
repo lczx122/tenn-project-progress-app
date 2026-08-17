@@ -76,14 +76,43 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
           {existing && selected.length > 0 && (
             <Field label="Progress per subcontractor">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {selected.map((sub) => (
-                  <div key={sub} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg)', borderRadius: 8, padding: '7px 10px' }}>
-                    <div style={{ fontSize: 12, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
-                    <button className="stepper-btn" aria-label={`Decrease ${sub}`} onClick={() => setPct(sub, (pcts[sub] ?? 0) - 5)}>−</button>
-                    <div className="mono" style={{ fontSize: 13, width: 42, textAlign: 'center' }}>{pcts[sub] ?? 0}%</div>
-                    <button className="stepper-btn" aria-label={`Increase ${sub}`} style={{ color: 'var(--teal)' }} onClick={() => setPct(sub, (pcts[sub] ?? 0) + 5)}>+</button>
-                  </div>
-                ))}
+                {selected.map((sub) => {
+                  const pct = pcts[sub] ?? 0
+                  return (
+                    <div key={sub} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ fontSize: 12, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
+                        <button className="stepper-btn" aria-label={`Decrease ${sub}`} onClick={() => setPct(sub, pct - 5)}>−</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <input
+                            className="pct-input mono"
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={100}
+                            value={pct}
+                            aria-label={`${sub} percent`}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => setPct(sub, e.target.value === '' ? 0 : Math.round(Number(e.target.value)))}
+                          />
+                          <span style={{ fontSize: 12, color: 'var(--text-2)' }}>%</span>
+                        </div>
+                        <button className="stepper-btn" aria-label={`Increase ${sub}`} style={{ color: 'var(--teal)' }} onClick={() => setPct(sub, pct + 5)}>+</button>
+                      </div>
+                      <input
+                        className="pct-slider"
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={pct}
+                        aria-label={`${sub} progress slider`}
+                        style={{ background: `linear-gradient(to right, var(--teal) ${pct}%, var(--fill) ${pct}%)` }}
+                        onChange={(e) => setPct(sub, Number(e.target.value))}
+                      />
+                    </div>
+                  )
+                })}
               </div>
             </Field>
           )}
