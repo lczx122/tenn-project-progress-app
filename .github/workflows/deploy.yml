@@ -27,6 +27,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The anon/publishable key is safe to embed in the public bundle; the
+      # secret/service key is NOT. Fail fast with a clear message if the wrong
+      # key was pasted into the repo secret.
+      - name: Check Supabase key is the public one
+        env:
+          KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then exit 0; fi
+          case "$KEY" in
+            sb_secret_*)
+              echo "::error::VITE_SUPABASE_ANON_KEY contains a Supabase SECRET key (sb_secret_...). Use the 'anon public' / 'publishable' key from Supabase → Project Settings → API instead, and rotate the secret key."
+              exit 1;;
+          esac
+          payload=$(printf '%s' "$KEY" | cut -d. -f2 | tr '_-' '/+' | { p=$(cat); pad=$(( (4 - ${#p} % 4) % 4 )); printf '%s' "$p"; printf '=%.0s' $(seq 1 $pad) 2>/dev/null; } | base64 -d 2>/dev/null || true)
+          if printf '%s' "$payload" | grep -q '"role" *: *"service_role"'; then
+            echo "::error::VITE_SUPABASE_ANON_KEY contains the service_role key. Use the 'anon public' key from Supabase → Project Settings → API instead, and rotate the service_role key."
+            exit 1
+          fi
+
       - name: Build (with Pages base path)
         run: npm run build -- --base=/tenn-project-progress-app/
         env:
