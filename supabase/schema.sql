@@ -1,37 +1,45 @@
--- Reno Tracker — Supabase schema.
+-- Reno Tracker — Supabase schema (no-login shared sync).
 -- Run this once in your Supabase project: SQL Editor → New query → paste → Run.
+-- Safe to re-run, and safe to run on a project that had the older auth-based schema.
+--
+-- NOTE: this makes the app's data writable by anyone who has the app's URL
+-- (the publishable key ships inside the public app bundle). That is the
+-- deliberate trade-off for login-free sync.
 
--- 1 · App state: one row per account, whole app state as JSON (last-write-wins).
-create table if not exists public.app_state (
-  user_id uuid primary key references auth.users (id) on delete cascade,
+-- 1 · One shared state row for all devices (last-write-wins).
+create table if not exists public.shared_state (
+  id text primary key,
   data jsonb not null,
   updated_at timestamptz not null default now()
 );
 
-alter table public.app_state enable row level security;
+alter table public.shared_state enable row level security;
 
-create policy "own state select" on public.app_state
-  for select using (auth.uid() = user_id);
-create policy "own state insert" on public.app_state
-  for insert with check (auth.uid() = user_id);
-create policy "own state update" on public.app_state
-  for update using (auth.uid() = user_id);
-create policy "own state delete" on public.app_state
-  for delete using (auth.uid() = user_id);
+drop policy if exists "open select" on public.shared_state;
+drop policy if exists "open insert" on public.shared_state;
+drop policy if exists "open update" on public.shared_state;
+create policy "open select" on public.shared_state for select using (true);
+create policy "open insert" on public.shared_state for insert with check (true);
+create policy "open update" on public.shared_state for update using (true);
 
 -- Live sync between devices.
-alter publication supabase_realtime add table public.app_state;
+do $$
+begin
+  alter publication supabase_realtime add table public.shared_state;
+exception when duplicate_object then null;
+end $$;
 
--- 2 · Photos & uploaded drawings: private bucket, one folder per account.
+-- 2 · Photos & uploaded drawings.
 insert into storage.buckets (id, name, public)
 values ('photos', 'photos', false)
 on conflict (id) do nothing;
 
-create policy "own photos select" on storage.objects
-  for select using (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);
-create policy "own photos insert" on storage.objects
-  for insert with check (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);
-create policy "own photos update" on storage.objects
-  for update using (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);
-create policy "own photos delete" on storage.objects
-  for delete using (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);
+drop policy if exists "open storage select" on storage.objects;
+drop policy if exists "open storage insert" on storage.objects;
+drop policy if exists "open storage update" on storage.objects;
+create policy "open storage select" on storage.objects
+  for select using (bucket_id = 'photos');
+create policy "open storage insert" on storage.objects
+  for insert with check (bucket_id = 'photos');
+create policy "open storage update" on storage.objects
+  for update using (bucket_id = 'photos');

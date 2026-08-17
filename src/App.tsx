@@ -96,6 +96,8 @@ export default function App() {
       <TabBar />
       {pdfTop && <PdfViewer drawingId={pdfTop.drawingId} />}
       <ProjectSwitcher />
+      {/* sheets portal here so they stack above the tab bar and transformed layers */}
+      <div id="overlay-root" />
       <Toast />
     </div>
   )

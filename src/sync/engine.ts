@@ -1,17 +1,20 @@
-// Offline-first sync engine.
+// Login-free, offline-first sync engine.
 //
-// The device's IndexedDB stays the source of truth for the UI; when online and
-// signed in, the whole app state is mirrored to one row in Supabase
-// (last-write-wins by timestamp) and photos/uploads are mirrored to Storage.
-// Other devices receive changes live via a realtime subscription.
+// All devices opening the app share one dataset: the whole app state lives in
+// a single Supabase row (last-write-wins by timestamp), photos and uploads in
+// Storage. The device's IndexedDB stays the source of truth for the UI; when
+// online, changes push automatically and other devices receive them live via
+// realtime, plus pull on start / focus / reconnect and a periodic safety pull.
 import { useSyncExternalStore } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import { supabase } from './client'
 import { getState, replaceState, setOnLocalChange } from '../store'
 import { kvGet, kvSet, photoGet, photoPut, fileGet, filePut } from '../db'
 import type { AppState } from '../types'
 
-export type SyncStatus = 'disabled' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error'
+export type SyncStatus = 'disabled' | 'syncing' | 'synced' | 'offline' | 'error'
+
+const ROW_ID = 'global'
+const PULL_INTERVAL_MS = 60_000
 
 interface SyncMeta {
   /** updated_at of the last state successfully pushed or adopted */
@@ -32,22 +35,23 @@ const QUEUE_KEY = 'sync-upload-queue'
 
 let meta: SyncMeta = { lastSyncedAt: '', dirty: false, localChangedAt: '' }
 let queue: UploadTask[] = []
-let session: Session | null = null
 let pushTimer: ReturnType<typeof setTimeout> | undefined
 let running = false
 
 // ---- status (subscribable from React) ----
-let status: SyncStatus = supabase ? 'signed-out' : 'disabled'
+let status: SyncStatus = supabase ? 'syncing' : 'disabled'
 let lastError = ''
 const statusListeners = new Set<() => void>()
+let snapshot: { status: SyncStatus; error: string } = { status, error: lastError }
 
 function setStatus(next: SyncStatus, err = '') {
   status = next
   lastError = err
+  snapshot = { status, error: lastError }
   statusListeners.forEach((l) => l())
 }
 
-export function useSyncStatus(): { status: SyncStatus; error: string; email: string | null } {
+export function useSyncStatus(): { status: SyncStatus; error: string } {
   return useSyncExternalStore(
     (cb) => {
       statusListeners.add(cb)
@@ -57,15 +61,6 @@ export function useSyncStatus(): { status: SyncStatus; error: string; email: str
     () => snapshot,
   )
 }
-let snapshot: { status: SyncStatus; error: string; email: string | null } = {
-  status,
-  error: lastError,
-  email: null,
-}
-function refreshSnapshot() {
-  snapshot = { status, error: lastError, email: session?.user.email ?? null }
-}
-statusListeners.add(refreshSnapshot)
 
 const saveMeta = () => kvSet(META_KEY, meta).catch(() => {})
 const saveQueue = () => kvSet(QUEUE_KEY, queue).catch(() => {})
@@ -84,43 +79,25 @@ export async function startSync(): Promise<void> {
     schedulePush()
   })
 
-  const { data } = await supabase.auth.getSession()
-  session = data.session
-  supabase.auth.onAuthStateChange((_event, s) => {
-    const wasSignedIn = !!session
-    session = s
-    refreshSnapshot()
-    if (s && !wasSignedIn) {
-      setStatus('syncing')
-      void fullSync()
-      subscribeRealtime()
-    }
-    if (!s) setStatus('signed-out')
-  })
-
   window.addEventListener('online', () => void fullSync())
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') void fullSync()
   })
+  setInterval(() => void fullSync(), PULL_INTERVAL_MS)
 
-  if (session) {
-    setStatus('syncing')
-    void fullSync()
-    subscribeRealtime()
-  } else {
-    setStatus('signed-out')
-  }
+  void fullSync()
+  subscribeRealtime()
 }
 
 function schedulePush() {
-  if (!supabase || !session) return
+  if (!supabase) return
   clearTimeout(pushTimer)
   pushTimer = setTimeout(() => void fullSync(), 1500)
 }
 
 /** Pull-compare-push. Safe to call often; coalesces concurrent invocations. */
 async function fullSync(): Promise<void> {
-  if (!supabase || !session || running) return
+  if (!supabase || running) return
   if (!navigator.onLine) {
     setStatus('offline')
     return
@@ -129,9 +106,9 @@ async function fullSync(): Promise<void> {
   setStatus('syncing')
   try {
     const { data: row, error } = await supabase
-      .from('app_state')
+      .from('shared_state')
       .select('data, updated_at')
-      .eq('user_id', session.user.id)
+      .eq('id', ROW_ID)
       .maybeSingle()
     if (error) throw error
 
@@ -146,8 +123,8 @@ async function fullSync(): Promise<void> {
       // Local wins (or first push): upload the whole state.
       const now = new Date().toISOString()
       const { error: upErr } = await supabase
-        .from('app_state')
-        .upsert({ user_id: session.user.id, data: getState(), updated_at: now })
+        .from('shared_state')
+        .upsert({ id: ROW_ID, data: getState(), updated_at: now })
       if (upErr) throw upErr
       meta = { lastSyncedAt: now, dirty: false, localChangedAt: meta.localChangedAt }
     }
@@ -164,12 +141,12 @@ async function fullSync(): Promise<void> {
 }
 
 function subscribeRealtime() {
-  if (!supabase || !session) return
+  if (!supabase) return
   supabase
-    .channel('app-state-sync')
+    .channel('shared-state-sync')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'app_state', filter: `user_id=eq.${session.user.id}` },
+      { event: '*', schema: 'public', table: 'shared_state', filter: `id=eq.${ROW_ID}` },
       (payload) => {
         const at = (payload.new as { updated_at?: string })?.updated_at ?? ''
         if (at && at > meta.lastSyncedAt) void fullSync()
@@ -180,8 +157,8 @@ function subscribeRealtime() {
 
 // ------------------------------- binary sync -------------------------------
 
-function objectPath(task: UploadTask): string {
-  return `${session!.user.id}/${task.store}/${task.id}`
+function objectPath(store: 'photos' | 'files', id: string): string {
+  return `shared/${store}/${id}`
 }
 
 /** Queue a photo/upload blob for mirroring to Supabase Storage. */
@@ -189,12 +166,12 @@ export function enqueueUpload(id: string, store: 'photos' | 'files') {
   if (!supabase) return
   queue.push({ id, store })
   saveQueue()
-  if (session && navigator.onLine) void drainUploadQueue()
+  if (navigator.onLine) void drainUploadQueue()
 }
 
 let draining = false
 async function drainUploadQueue(): Promise<void> {
-  if (!supabase || !session || draining) return
+  if (!supabase || draining) return
   draining = true
   try {
     while (queue.length > 0) {
@@ -203,7 +180,10 @@ async function drainUploadQueue(): Promise<void> {
       if (blob) {
         const { error } = await supabase.storage
           .from('photos')
-          .upload(objectPath(task), blob, { upsert: true, contentType: blob.type || 'application/octet-stream' })
+          .upload(objectPath(task.store, task.id), blob, {
+            upsert: true,
+            contentType: blob.type || 'application/octet-stream',
+          })
         if (error && !`${error.message}`.includes('already exists')) throw error
       }
       queue.shift()
@@ -218,9 +198,9 @@ async function drainUploadQueue(): Promise<void> {
 
 /** Fetch a blob another device uploaded; caches it into IndexedDB. */
 export async function fetchRemoteBlob(id: string, store: 'photos' | 'files'): Promise<Blob | undefined> {
-  if (!supabase || !session) return undefined
+  if (!supabase) return undefined
   try {
-    const { data, error } = await supabase.storage.from('photos').download(`${session.user.id}/${store}/${id}`)
+    const { data, error } = await supabase.storage.from('photos').download(objectPath(store, id))
     if (error || !data) return undefined
     if (store === 'photos') await photoPut(id, data)
     else await filePut(id, data)
@@ -228,27 +208,6 @@ export async function fetchRemoteBlob(id: string, store: 'photos' | 'files'): Pr
   } catch {
     return undefined
   }
-}
-
-// ------------------------------- auth -------------------------------
-
-export async function signIn(email: string, password: string): Promise<string | null> {
-  if (!supabase) return 'Sync is not configured'
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-  return error ? error.message : null
-}
-
-export async function signUp(email: string, password: string): Promise<{ error: string | null; needsConfirm: boolean }> {
-  if (!supabase) return { error: 'Sync is not configured', needsConfirm: false }
-  const { data, error } = await supabase.auth.signUp({ email, password })
-  if (error) return { error: error.message, needsConfirm: false }
-  return { error: null, needsConfirm: !data.session }
-}
-
-export async function signOut(): Promise<void> {
-  if (!supabase) return
-  await supabase.auth.signOut()
-  setStatus('signed-out')
 }
 
 /** Force an immediate sync (the "Sync now" button). */

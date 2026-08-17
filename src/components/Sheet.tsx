@@ -6,6 +6,7 @@
 // momentum to decide settle-vs-dismiss and hands the finger's velocity to the
 // spring; the scrim opacity follows the sheet position frame-by-frame.
 import { useEffect, useLayoutEffect, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { createSpring, prefersReducedMotion, project, rubberband, VelocityTracker, type Spring } from '../utils/motion'
 
 interface SheetProps {
@@ -104,7 +105,10 @@ export function Sheet({ onClosed, children }: SheetProps) {
     window.addEventListener('pointercancel', onUp)
   }
 
-  return (
+  // Portal to the app-frame overlay root: screens live inside transformed
+  // layers (stacking contexts), so an in-place sheet could never stack above
+  // the tab bar.
+  return createPortal(
     <div className="sheet-backdrop" ref={backdropRef} onClick={close}>
       <div className="sheet" ref={panelRef} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-grab" onPointerDown={onGrabberDown}>
@@ -112,6 +116,7 @@ export function Sheet({ onClosed, children }: SheetProps) {
         </div>
         {children(close)}
       </div>
-    </div>
+    </div>,
+    document.getElementById('overlay-root') ?? document.body,
   )
 }

@@ -42,7 +42,7 @@ export function createSpring(initial: number, onUpdate: (v: number) => void): Sp
     const accel = -omega * omega * (value - target) - 2 * zeta * omega * velocity
     velocity += accel * dt
     value += velocity * dt
-    if (Math.abs(value - target) < 0.1 && Math.abs(velocity) < 5) {
+    if (Math.abs(value - target) < 0.5 && Math.abs(velocity) < 20) {
       value = target
       velocity = 0
       onUpdate(value)

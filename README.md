@@ -35,23 +35,23 @@ node scripts/smoke.mjs   # e2e smoke test against the preview server (needs prev
 
 Note: the service worker is only generated for production builds — test install/offline behavior via `npm run build && npm run preview`.
 
-## Cross-device sync (Supabase)
+## Cross-device sync (Supabase, no login)
 
-The app is local-first: it always works offline from the device's IndexedDB. When built with Supabase credentials and signed in, every change is mirrored to Supabase (whole state as one row, last-write-wins by timestamp; photos and uploaded drawings to Storage) and other signed-in devices update live via realtime. Without credentials the app simply runs in local-only mode.
+The app is local-first: it always works offline from the device's IndexedDB. When built with Supabase credentials, every change is mirrored to one shared Supabase row (last-write-wins by timestamp; photos and uploaded drawings to Storage) and **all devices opening the app share the same live data — no accounts, no sign-in**. Other devices update live via realtime, plus pulls on start/focus/reconnect and a 60s safety interval. Without credentials the app simply runs in local-only mode.
+
+> Trade-off to understand: login-free sync means anyone who has the app's URL can read and write the shared data (the publishable key ships in the public bundle). For a small site team this is usually fine; if you ever need it locked down, an auth layer can be added back.
 
 One-time setup:
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. In the Supabase dashboard: **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), **Run**.
-3. Optional but recommended for easy onboarding: **Authentication → Sign In / Providers → Email → turn off "Confirm email"** (otherwise each new account must click an email link before first sign-in).
-4. Copy your **Project URL** and **anon public key** from **Project Settings → API**.
-5. In the GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**, add:
+2. In the Supabase dashboard: **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql), **Run**. (Safe to re-run, and safe on a project that had the older auth-based schema.)
+3. Copy your **Project URL** and **publishable (anon) key** from **Project Settings → API**.
+4. In the GitHub repo: **Settings → Secrets and variables → Actions**, add:
    - `VITE_SUPABASE_URL` — the project URL
-   - `VITE_SUPABASE_ANON_KEY` — the anon public key
-6. Re-run the deploy: **Actions → Deploy to GitHub Pages → Run workflow** (or push any commit).
-7. In the app: tap the project name ▾ → gear icon → **SYNC** → create an account, then sign in with the **same account** on every device you want synced.
+   - `VITE_SUPABASE_ANON_KEY` — the publishable/anon key (never the secret key — the deploy guard will refuse it)
+5. Re-run the deploy: **Actions → Deploy to GitHub Pages → Run workflow** (or push any commit).
 
-The cloud icon on the Home screen shows sync state (teal = synced, pulsing = syncing, gray = offline/signed out, red = error). Changes made offline are pushed automatically when connectivity returns; if two devices edit while offline, the most recent edit wins.
+That's it — open the app anywhere and it syncs. The cloud icon on the Home screen shows sync state (teal = synced, pulsing = syncing, gray = offline, red = error). Changes made offline are pushed automatically when connectivity returns; if two devices edit while offline, the most recent edit wins.
 
 ## Deploy (GitHub Pages)
 
