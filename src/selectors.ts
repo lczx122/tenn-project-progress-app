@@ -37,6 +37,14 @@ export function lowSupplies(project: Project): Supply[] {
   return project.supplies.filter((s) => isLow(s) && !s.ordered)
 }
 
+/** Overall material-stock health for the Home summary tile. */
+export function supplyHealth(project: Project): 'good' | 'low' | 'reorder' {
+  const onSite = project.supplies.filter((s) => s.status === 'stock')
+  if (onSite.some((s) => s.stock <= s.min && !s.ordered)) return 'reorder'
+  if (onSite.some((s) => s.stock <= s.min * 1.5)) return 'low'
+  return 'good'
+}
+
 export function transitSupplies(project: Project): Supply[] {
   return project.supplies.filter((s) => s.status === 'transit')
 }

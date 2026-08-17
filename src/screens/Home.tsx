@@ -3,9 +3,34 @@ import { supabase } from '../sync/client'
 import { useSyncStatus } from '../sync/engine'
 import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
-import { lowSupplies, overallPct, phaseHasSubcon, phaseStatus, sopDoneCount, sopSteps, subconPct, transitSupplies } from '../selectors'
+import { lowSupplies, overallPct, phaseHasSubcon, phaseStatus, sopDoneCount, sopSteps, subconPct, supplyHealth, transitSupplies } from '../selectors'
 import { fmtDayUpper, fmtShort } from '../utils/dates'
 import { todayISO } from '../utils/dates'
+import { usePhotoUrl } from '../utils/photos'
+
+function SopPhotoTile({ photoId }: { photoId?: string }) {
+  const url = usePhotoUrl(photoId)
+  return (
+    <div
+      style={{
+        flex: 1, borderRadius: 10, minHeight: 56, position: 'relative', overflow: 'hidden',
+        background: url ? `url(${url}) center/cover` : 'rgba(255,255,255,0.14)',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0, padding: '10px 4px 4px',
+          fontSize: 10, textAlign: 'center', color: '#fff', fontWeight: 500,
+          background: 'linear-gradient(transparent, rgba(0,0,0,0.5))',
+        }}
+      >
+        Site photos
+      </div>
+    </div>
+  )
+}
+
+const AMBER = '#FFD79E'
 
 export function Home() {
   const s = useAppState()
@@ -17,6 +42,8 @@ export function Home() {
   const steps = sopSteps(dr).slice(0, 4)
   const done = sopDoneCount(dr)
   const cta = dr.submitted ? 'View today’s report' : done > 0 ? 'Continue daily report' : 'Start daily report'
+  const todayReport = p.reports.find((r) => r.dateISO === todayISO())
+  const showPreview = dr.submitted && !!todayReport
 
   const low = lowSupplies(p)
   const transit = transitSupplies(p)
@@ -72,7 +99,10 @@ export function Home() {
         <button
           className="pressable"
           style={{ background: 'var(--teal)', borderRadius: 16, padding: 16, color: '#fff', width: '100%' }}
-          onClick={() => ui.goTab('report')}
+          onClick={() => {
+            if (showPreview) ui.push({ type: 'reportView', reportId: todayReport!.id })
+            else ui.goTab('report')
+          }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>TODAY’S SOP · {fmtDayUpper(todayISO())}</div>
@@ -80,23 +110,48 @@ export function Home() {
               {done} of 5 done
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            {steps.map((st) => {
-              const ok = dr.submitted || st.done
-              return (
-                <div
-                  key={st.label}
-                  style={{
-                    flex: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 10, padding: '10px 6px', textAlign: 'center',
-                    outline: ok ? 'none' : '1.5px dashed rgba(255,255,255,0.5)', outlineOffset: -1.5,
-                  }}
-                >
-                  <div style={{ fontSize: 17, opacity: ok ? 1 : 0.6 }}>{ok ? '✓' : '·'}</div>
-                  <div style={{ fontSize: 10, marginTop: 2, opacity: 0.9 }}>{st.label === 'Photos' ? 'Site photos' : st.label}</div>
+          {showPreview ? (
+            // after submission: live summary of today's report instead of checkmarks
+            (() => {
+              const workers = Object.values(todayReport!.manpower).reduce((a, b) => a + b, 0)
+              const health = supplyHealth(p)
+              const matLabel = health === 'reorder' ? 'Needs reorder' : health === 'low' ? 'Getting low' : 'All good'
+              const matColor = health === 'good' ? '#fff' : AMBER
+              const hasIssues = todayReport!.issues.trim().length > 0
+              const tile = (value: string, label: string, color: string, big = false) => (
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 10, padding: '9px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 56 }}>
+                  <div className={big ? 'mono' : undefined} style={{ fontSize: big ? 18 : 11.5, fontWeight: big ? 500 : 700, lineHeight: 1.15, color }}>{value}</div>
+                  <div style={{ fontSize: 10, marginTop: 3, opacity: 0.85 }}>{label}</div>
                 </div>
               )
-            })}
-          </div>
+              return (
+                <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'stretch' }}>
+                  <SopPhotoTile photoId={todayReport!.photoIds[0]} />
+                  {tile(String(workers), 'Manpower', '#fff', true)}
+                  {tile(matLabel, 'Materials', matColor)}
+                  {tile(hasIssues ? 'Needs attention' : 'None', 'Issues', hasIssues ? AMBER : '#fff')}
+                </div>
+              )
+            })()
+          ) : (
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              {steps.map((st) => {
+                const ok = dr.submitted || st.done
+                return (
+                  <div
+                    key={st.label}
+                    style={{
+                      flex: 1, background: 'rgba(255,255,255,0.14)', borderRadius: 10, padding: '10px 6px', textAlign: 'center',
+                      outline: ok ? 'none' : '1.5px dashed rgba(255,255,255,0.5)', outlineOffset: -1.5,
+                    }}
+                  >
+                    <div style={{ fontSize: 17, opacity: ok ? 1 : 0.6 }}>{ok ? '✓' : '·'}</div>
+                    <div style={{ fontSize: 10, marginTop: 2, opacity: 0.9 }}>{st.label === 'Photos' ? 'Site photos' : st.label}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
           <div style={{ marginTop: 12, background: '#fff', color: 'var(--teal)', borderRadius: 10, textAlign: 'center', padding: 11, fontWeight: 600, fontSize: 14 }}>
             {cta} →
           </div>
