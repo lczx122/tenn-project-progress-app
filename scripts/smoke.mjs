@@ -84,10 +84,9 @@ for (let i = 0; i < 3; i++) {
   execSync(`printf '%s' '${b64}' | base64 -d > '${f}'`)
   jpegs.push(f)
 }
-for (const f of jpegs) {
-  await page.setInputFiles('input[type="file"][accept="image/*"]', f)
-  await page.waitForTimeout(400)
-}
+// use the album input (multi-select capable); the camera input has [capture]
+await page.setInputFiles('input[type="file"][multiple]', jpegs)
+await page.waitForTimeout(1000)
 // manpower
 for (let i = 0; i < 3; i++) await page.click('button.stepper-btn:has-text("+") >> nth=0')
 await page.click('button.stepper-btn:has-text("+") >> nth=2')

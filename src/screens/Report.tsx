@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { Camera, Images, X } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { manTotal, requiredStepsOk, sopDoneCount, sopSteps } from '../selectors'
@@ -38,7 +38,8 @@ export function Report() {
   const ui = useUi()
   const p = activeProject(s)
   const dr = p.draft
-  const fileRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const albumRef = useRef<HTMLInputElement>(null)
   const [matPickerOpen, setMatPickerOpen] = useState(false)
   const [busyPhoto, setBusyPhoto] = useState(false)
 
@@ -55,17 +56,20 @@ export function Report() {
     if (!files || files.length === 0) return
     setBusyPhoto(true)
     try {
+      let added = 0
       for (const f of Array.from(files)) {
-        if (dr.photoIds.length >= MAX_PHOTOS) break
+        if (dr.photoIds.length + added >= MAX_PHOTOS) break
         const id = await storePhotoFile(f)
         actions.draftAddPhoto(id)
+        added++
       }
-      ui.showToast('Photo added')
+      ui.showToast(added === 1 ? 'Photo added' : `${added} photos added`)
     } catch {
       ui.showToast('Could not add photo')
     } finally {
       setBusyPhoto(false)
-      if (fileRef.current) fileRef.current.value = ''
+      if (cameraRef.current) cameraRef.current.value = ''
+      if (albumRef.current) albumRef.current.value = ''
     }
   }
 
@@ -120,24 +124,47 @@ export function Report() {
               <PhotoTile key={id} id={id} onRemove={() => actions.draftRemovePhoto(id)} />
             ))}
             {dr.photoIds.length < MAX_PHOTOS && !dr.submitted && (
-              <button
-                style={{
-                  width: 62, height: 62, borderRadius: 8, border: '1.5px dashed #C9C4BA',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 22,
-                }}
-                onClick={() => fileRef.current?.click()}
-                disabled={busyPhoto}
-                aria-label="Add photo"
-              >
-                {busyPhoto ? '…' : '+'}
-              </button>
+              <>
+                <button
+                  style={{
+                    width: 62, height: 62, borderRadius: 8, border: '1.5px dashed #C9C4BA',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, color: 'var(--muted)',
+                  }}
+                  onClick={() => cameraRef.current?.click()}
+                  disabled={busyPhoto}
+                  aria-label="Take photo"
+                >
+                  <Camera size={18} />
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>{busyPhoto ? '…' : 'Camera'}</span>
+                </button>
+                <button
+                  style={{
+                    width: 62, height: 62, borderRadius: 8, border: '1.5px dashed #C9C4BA',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, color: 'var(--muted)',
+                  }}
+                  onClick={() => albumRef.current?.click()}
+                  disabled={busyPhoto}
+                  aria-label="Add from album"
+                >
+                  <Images size={18} />
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>{busyPhoto ? '…' : 'Album'}</span>
+                </button>
+              </>
             )}
           </div>
           <input
-            ref={fileRef}
+            ref={cameraRef}
             type="file"
             accept="image/*"
             capture="environment"
+            style={{ display: 'none' }}
+            onChange={(e) => onFiles(e.target.files)}
+          />
+          <input
+            ref={albumRef}
+            type="file"
+            accept="image/*"
+            multiple
             style={{ display: 'none' }}
             onChange={(e) => onFiles(e.target.files)}
           />
