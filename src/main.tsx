@@ -1,13 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
 import './styles.css'
 import App from './App'
 import { UiProvider } from './ui'
 import { initStore } from './store'
 import { startSync } from './sync/engine'
+import { initAppUpdates } from './utils/appUpdate'
 
-registerSW({ immediate: true })
+initAppUpdates()
 
 initStore().then(() => {
   void startSync()

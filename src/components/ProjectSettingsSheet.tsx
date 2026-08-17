@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, RotateCw, Trash2 } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { ConfirmButton, Field, TextField } from './form'
 import { Sheet } from './Sheet'
 import { SyncSection } from './SyncSection'
+import { BUILD_VERSION, refreshApp } from '../utils/appUpdate'
 
 export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
   const s = useAppState()
@@ -119,6 +120,23 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
               }}
             />
           )}
+          <button
+            type="button"
+            style={{
+              width: '100%', borderRadius: 10, padding: 12, fontWeight: 600, fontSize: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              background: '#fff', color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)',
+            }}
+            onClick={() => {
+              ui.showToast('Checking for updates…')
+              void refreshApp()
+            }}
+          >
+            <RotateCw size={15} /> Refresh app
+          </button>
+          <div style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>
+            Version {BUILD_VERSION} · pulls the latest version and reloads
+          </div>
           <ConfirmButton
             label="Reset app data (restore demo)"
             onConfirm={() => {
