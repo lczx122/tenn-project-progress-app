@@ -1,6 +1,7 @@
 // Camera capture handling: downscale to keep IndexedDB small, store as JPEG blob.
 import { useEffect, useState } from 'react'
 import { photoGet, photoPut } from '../db'
+import { enqueueUpload, fetchRemoteBlob } from '../sync/engine'
 
 const MAX_DIM = 1280
 
@@ -13,6 +14,7 @@ export async function storePhotoFile(file: File): Promise<string> {
     // keep the original if decoding fails
   }
   await photoPut(id, blob)
+  enqueueUpload(id, 'photos')
   return id
 }
 
@@ -38,7 +40,8 @@ const urlCache = new Map<string, string>()
 export async function getPhotoUrl(id: string): Promise<string | undefined> {
   const cached = urlCache.get(id)
   if (cached) return cached
-  const blob = await photoGet(id)
+  // local first; fall back to the sync backend for photos taken on another device
+  const blob = (await photoGet(id)) ?? (await fetchRemoteBlob(id, 'photos'))
   if (!blob) return undefined
   const url = URL.createObjectURL(blob)
   urlCache.set(id, url)

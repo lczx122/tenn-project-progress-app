@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { ConfirmButton, Field, TextField } from './form'
+import { SyncSection } from './SyncSection'
 
 export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
   const s = useAppState()
@@ -100,6 +101,8 @@ export function ProjectSettingsSheet({ onClose }: { onClose: () => void }) {
             <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--teal)' }}>Add subcontractor</div>
           </button>
         )}
+
+        <SyncSection />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 18 }}>
           <button className="primary-btn" onClick={saveMeta}>Save project</button>

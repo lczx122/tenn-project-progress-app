@@ -149,6 +149,12 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
 }
 .viewer iframe, .viewer img, .viewer object { flex: 1; width: 100%; border: none; background: #fff; }
 
+/* ---- sync indicators ---- */
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pulse { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.4; } }
+
 /* larger view on desktop keeps a phone-ish column */
 @media (min-width: 500px) {
   .app-frame { box-shadow: 0 0 60px rgba(0, 0, 0, 0.35); }

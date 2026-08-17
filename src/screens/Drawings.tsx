@@ -5,6 +5,7 @@ import { useUi } from '../ui'
 import { fmtFull, todayISO } from '../utils/dates'
 import { fileGet, filePut } from '../db'
 import { assetUrl } from '../utils/base'
+import { enqueueUpload, fetchRemoteBlob } from '../sync/engine'
 import type { DrawingSet } from '../types'
 
 async function countPdfPages(file: File): Promise<number> {
@@ -30,6 +31,7 @@ export function Drawings() {
     if (!file) return
     const blobId = `file-${Date.now()}`
     await filePut(blobId, file)
+    enqueueUpload(blobId, 'files')
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
     const set: DrawingSet = {
       id: `dw-${Date.now()}`,
@@ -52,7 +54,7 @@ export function Drawings() {
       if (ds.src.kind === 'bundled') {
         blob = await fetch(assetUrl(ds.src.url)).then((r) => (r.ok ? r.blob() : undefined))
       } else {
-        blob = await fileGet(ds.src.blobId)
+        blob = (await fileGet(ds.src.blobId)) ?? (await fetchRemoteBlob(ds.src.blobId, 'files'))
       }
       if (!blob) throw new Error('no blob')
       const { sharePdf } = await import('../utils/pdf')

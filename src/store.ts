@@ -23,9 +23,23 @@ function persist() {
   }, 120)
 }
 
+// Called after every local mutation so the sync engine can schedule a push.
+let onLocalChange: (() => void) | null = null
+export function setOnLocalChange(cb: (() => void) | null) {
+  onLocalChange = cb
+}
+
 function set(updater: (s: AppState) => AppState) {
   if (!state) return
   state = updater(state)
+  emit()
+  persist()
+  onLocalChange?.()
+}
+
+/** Adopt state from the sync backend (does NOT count as a local change). */
+export function replaceState(next: AppState) {
+  state = rolloverDrafts(next)
   emit()
   persist()
 }

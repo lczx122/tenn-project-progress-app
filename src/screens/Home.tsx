@@ -1,4 +1,6 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Cloud, CloudOff } from 'lucide-react'
+import { supabase } from '../sync/client'
+import { useSyncStatus } from '../sync/engine'
 import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
 import { lowSupplies, overallPct, sopDoneCount, sopSteps, subconPct, transitSupplies } from '../selectors'
@@ -8,6 +10,7 @@ import { todayISO } from '../utils/dates'
 export function Home() {
   const s = useAppState()
   const ui = useUi()
+  const sync = useSyncStatus()
   const p = activeProject(s)
   const dr = p.draft
 
@@ -38,13 +41,29 @@ export function Home() {
             {p.name} <ChevronDown size={16} color="var(--teal)" />
           </button>
         </div>
-        <div
-          style={{
-            width: 40, height: 40, borderRadius: '50%', background: 'var(--teal)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 15,
-          }}
-        >
-          {initials || 'SV'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {supabase && (
+            <button
+              onClick={() => ui.setSwitcherOpen(true)}
+              aria-label="Sync status"
+              style={{ display: 'flex', padding: 4 }}
+              title={sync.status}
+            >
+              {sync.status === 'synced' || sync.status === 'syncing' ? (
+                <Cloud size={18} color="var(--teal)" className={sync.status === 'syncing' ? 'pulse' : ''} />
+              ) : (
+                <CloudOff size={18} color={sync.status === 'error' ? 'var(--danger)' : 'var(--muted)'} />
+              )}
+            </button>
+          )}
+          <div
+            style={{
+              width: 40, height: 40, borderRadius: '50%', background: 'var(--teal)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 15,
+            }}
+          >
+            {initials || 'SV'}
+          </div>
         </div>
       </div>
 

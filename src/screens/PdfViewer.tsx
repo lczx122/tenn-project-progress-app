@@ -4,6 +4,7 @@ import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
 import { fileGet } from '../db'
 import { assetUrl } from '../utils/base'
+import { fetchRemoteBlob } from '../sync/engine'
 
 export function PdfViewer({ drawingId }: { drawingId: string }) {
   const s = useAppState()
@@ -22,12 +23,14 @@ export function PdfViewer({ drawingId }: { drawingId: string }) {
     } else {
       const src = ds.src
       setIsImage(src.mime.startsWith('image/'))
-      fileGet(src.blobId).then((blob) => {
-        if (blob) {
-          objectUrl = URL.createObjectURL(blob)
-          setUrl(objectUrl)
-        }
-      })
+      fileGet(src.blobId)
+        .then((blob) => blob ?? fetchRemoteBlob(src.blobId, 'files'))
+        .then((blob) => {
+          if (blob) {
+            objectUrl = URL.createObjectURL(blob)
+            setUrl(objectUrl)
+          }
+        })
     }
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl)

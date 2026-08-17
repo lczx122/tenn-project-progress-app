@@ -29,6 +29,10 @@ jobs:
 
       - name: Build (with Pages base path)
         run: npm run build -- --base=/tenn-project-progress-app/
+        env:
+          # Optional — set these repo secrets to enable cross-device sync
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Publish to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
