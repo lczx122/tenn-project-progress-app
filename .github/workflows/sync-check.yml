@@ -1,0 +1,31 @@
+name: Sync backend check
+
+# Manually-triggered probe: is the Supabase backend reachable and is the
+# shared_state table set up? Uses only the public (publishable) key.
+on: workflow_dispatch
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe shared_state table
+        env:
+          URL: ${{ secrets.VITE_SUPABASE_URL }}
+          KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "RESULT: secrets not configured"
+            exit 0
+          fi
+          code=$(curl -s -o body.json -w "%{http_code}" \
+            "$URL/rest/v1/shared_state?select=id,updated_at" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "HTTP $code"
+          echo "BODY: $(cat body.json)"
+          if [ "$code" = "200" ]; then
+            echo "RESULT: table exists — sync backend is ready"
+          elif grep -q "schema cache\|does not exist" body.json; then
+            echo "RESULT: shared_state table missing — supabase/schema.sql has not been run yet"
+          else
+            echo "RESULT: unexpected response (see body above)"
+          fi
