@@ -1,8 +1,15 @@
 name: Sync backend check
 
-# Manually-triggered probe: is the Supabase backend reachable and is the
-# shared_state table set up? Uses only the public (publishable) key.
-on: workflow_dispatch
+# Probe: is the Supabase backend reachable and is the shared_state table
+# set up? Uses only the public (publishable) key. Runs on demand, and on
+# pushes that touch this file (which also registers it for dispatch).
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/pwa-development-hzfgvy
+    paths:
+      - '.github/workflows/sync-check.yml'
 
 jobs:
   probe:
