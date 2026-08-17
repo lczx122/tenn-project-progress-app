@@ -45,3 +45,21 @@ export const photoDelete = (id: string) => tx('photos', 'readwrite', (s) => s.de
 
 export const filePut = (id: string, blob: Blob) => tx('files', 'readwrite', (s) => s.put(blob, id))
 export const fileGet = (id: string) => tx<Blob | undefined>('files', 'readonly', (s) => s.get(id) as IDBRequest<Blob | undefined>)
+
+/** Wipe the entire database (state, photos, uploads). Used by "Reset app data". */
+export async function deleteDatabase(): Promise<void> {
+  if (dbPromise) {
+    try {
+      ;(await dbPromise).close()
+    } catch {
+      // already closed
+    }
+    dbPromise = null
+  }
+  await new Promise<void>((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(DB_NAME)
+    req.onsuccess = () => resolve()
+    req.onblocked = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
+}

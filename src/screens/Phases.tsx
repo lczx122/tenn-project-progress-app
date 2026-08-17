@@ -1,5 +1,8 @@
+import { useState } from 'react'
+import { Pencil } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
+import { PhaseEditSheet } from '../components/PhaseEditSheet'
 import type { Phase } from '../types'
 
 export function Phases() {
@@ -7,6 +10,8 @@ export function Phases() {
   const ui = useUi()
   const p = activeProject(s)
   const pf = ui.phaseFilter
+  // null = closed, '' = adding, otherwise the phase id being edited
+  const [editing, setEditing] = useState<string | null>(null)
 
   const fBy = (list: Phase[]) => (pf === 'All' ? list : list.filter((ph) => ph.subcon === pf))
   const inProg = fBy(p.phases.filter((ph) => ph.status === 'prog'))
@@ -46,8 +51,11 @@ export function Phases() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {inProg.map((ph) => (
                 <div key={ph.id} className="card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: 15, fontWeight: 600 }}>{ph.name}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, flex: 1, minWidth: 0 }}>{ph.name}</div>
+                    <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
+                      <Pencil size={14} />
+                    </button>
                     <div className="mono" style={{ fontSize: 13, color: 'var(--teal)' }}>{ph.pct}%</div>
                   </div>
                   <div className="bar" style={{ height: 5, margin: '9px 0' }}>
@@ -79,7 +87,10 @@ export function Phases() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {done.map((ph) => (
                 <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', textDecoration: 'line-through' }}>{ph.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', textDecoration: 'line-through', flex: 1, minWidth: 0 }}>{ph.name}</div>
+                  <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
+                    <Pencil size={14} />
+                  </button>
                   <div style={{ color: 'var(--teal)', fontSize: 15 }}>✓</div>
                 </div>
               ))}
@@ -95,8 +106,11 @@ export function Phases() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {todo.map((ph) => (
                 <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{ph.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                    <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
+                      <Pencil size={14} />
+                    </button>
                     <div className="tag">{ph.subcon}</div>
                     <button
                       style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px' }}
@@ -113,7 +127,18 @@ export function Phases() {
             </div>
           </div>
         )}
+
+        <button
+          style={{ border: '1.5px dashed #C9C4BA', borderRadius: 12, padding: 14, textAlign: 'center', color: 'var(--teal)', fontSize: 13, fontWeight: 600, width: '100%' }}
+          onClick={() => setEditing('')}
+        >
+          + Add phase
+        </button>
       </div>
+
+      {editing !== null && (
+        <PhaseEditSheet phaseId={editing || undefined} onClose={() => setEditing(null)} />
+      )}
     </>
   )
 }

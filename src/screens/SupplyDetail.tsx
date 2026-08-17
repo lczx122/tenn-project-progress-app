@@ -1,14 +1,17 @@
-import { ChevronLeft, Phone, MessageCircle } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, Pencil, Phone, MessageCircle } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { isLow } from '../selectors'
 import { fmtShort } from '../utils/dates'
+import { SupplyEditSheet } from '../components/SupplyEditSheet'
 
 export function SupplyDetail({ id }: { id: string }) {
   const s = useAppState()
   const ui = useUi()
   const p = activeProject(s)
   const su = p.supplies.find((x) => x.id === id)
+  const [editing, setEditing] = useState(false)
 
   if (!su) return null
 
@@ -26,7 +29,10 @@ export function SupplyDetail({ id }: { id: string }) {
         <button className="back-chevron" onClick={ui.pop} aria-label="Back">
           <ChevronLeft size={22} />
         </button>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>{su.name}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, flex: 1, minWidth: 0 }}>{su.name}</div>
+        <button onClick={() => setEditing(true)} aria-label="Edit supply" style={{ padding: 6, color: 'var(--text-2)' }}>
+          <Pencil size={17} />
+        </button>
       </div>
 
       <div style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -141,6 +147,8 @@ export function SupplyDetail({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {editing && <SupplyEditSheet supplyId={su.id} onClose={() => setEditing(false)} />}
     </>
   )
 }

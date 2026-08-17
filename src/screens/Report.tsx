@@ -147,17 +147,22 @@ export function Report() {
             <div style={{ color: manStat.color, fontWeight: 700, fontSize: 13 }}>{manStat.text}</div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
-            {Object.keys(dr.man).map((name) => (
+            {p.subcons.map(({ name }) => (
               <div key={name} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
                 <div style={{ fontSize: 12, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <button className="stepper-btn" style={{ width: 24, height: 24, color: 'var(--text-2)' }} onClick={() => actions.draftSetMan(name, dr.man[name] - 1)} disabled={dr.submitted}>−</button>
-                  <div className="mono" style={{ fontSize: 14, width: 16, textAlign: 'center' }}>{dr.man[name]}</div>
-                  <button className="stepper-btn" style={{ width: 24, height: 24, color: 'var(--teal)' }} onClick={() => actions.draftSetMan(name, dr.man[name] + 1)} disabled={dr.submitted}>+</button>
+                  <button className="stepper-btn" style={{ width: 24, height: 24, color: 'var(--text-2)' }} onClick={() => actions.draftSetMan(name, (dr.man[name] ?? 0) - 1)} disabled={dr.submitted}>−</button>
+                  <div className="mono" style={{ fontSize: 14, width: 16, textAlign: 'center' }}>{dr.man[name] ?? 0}</div>
+                  <button className="stepper-btn" style={{ width: 24, height: 24, color: 'var(--teal)' }} onClick={() => actions.draftSetMan(name, (dr.man[name] ?? 0) + 1)} disabled={dr.submitted}>+</button>
                 </div>
               </div>
             ))}
           </div>
+          {p.subcons.length === 0 && (
+            <div style={{ fontSize: 12, color: 'var(--warn)', marginTop: 8 }}>
+              No subcontractors yet — add them via the project name ▾ → settings.
+            </div>
+          )}
         </div>
 
         {/* 3 · Materials */}

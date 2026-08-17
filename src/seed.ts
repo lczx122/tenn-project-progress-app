@@ -10,25 +10,6 @@ export const SUBCONS: Subcon[] = [
   { name: 'Hock Heng', trade: 'Glass & signage' },
 ]
 
-export const PHASE_TEMPLATE: { name: string; subcon: string }[] = [
-  { name: 'Faithview Meeting — Pre-condition check', subcon: 'Classic Home' },
-  { name: 'Material Prep', subcon: 'Classic Home' },
-  { name: 'Site Meeting with Sub-con', subcon: 'Classic Home' },
-  { name: 'Backdrop 01', subcon: 'Classic Home' },
-  { name: 'Reception Counter 01', subcon: 'Fanmuli 定制' },
-  { name: 'Pantry', subcon: 'Ah Kang' },
-  { name: 'Toilet Glass (M & F)', subcon: 'Hock Heng' },
-  { name: 'Backdrop 02', subcon: 'Classic Home' },
-  { name: 'Backdrop 03', subcon: 'Classic Home' },
-  { name: 'Backdrop 04', subcon: 'Classic Home' },
-  { name: 'Reception Counter 02', subcon: 'Fanmuli 定制' },
-  { name: 'Model House', subcon: 'Fanmuli 定制' },
-  { name: 'Sitting Area 01', subcon: 'Fanmuli 定制' },
-  { name: 'Sitting Area 02', subcon: 'Ah Kang' },
-  { name: 'Type Unit Signage A/B', subcon: 'Hock Heng' },
-  { name: 'Advertising Board', subcon: 'Hock Heng' },
-]
-
 export function emptyDraft(subcons: Subcon[]): Draft {
   return {
     dateISO: todayISO(),
@@ -41,18 +22,19 @@ export function emptyDraft(subcons: Subcon[]): Draft {
   }
 }
 
+/** New projects start blank — subcons, phases and supplies are added in-app. */
 export function newProject(id: string, name: string, targetDateISO: string): Project {
   return {
     id,
     name,
     targetDateISO,
-    subcons: SUBCONS,
-    phases: PHASE_TEMPLATE.map((p, i) => ({ id: `ph${i + 1}`, ...p, status: 'todo', pct: 0 })),
+    subcons: [],
+    phases: [],
     supplies: [],
     reports: [],
     drawings: [],
-    draft: emptyDraft(SUBCONS),
-    nextPo: 1052,
+    draft: emptyDraft([]),
+    nextPo: 1001,
   }
 }
 

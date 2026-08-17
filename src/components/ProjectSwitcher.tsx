@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Check, Plus } from 'lucide-react'
+import { Check, Plus, Settings } from 'lucide-react'
 import { actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { addDays, todayISO } from '../utils/dates'
+import { ProjectSettingsSheet } from './ProjectSettingsSheet'
 
 export function ProjectSwitcher() {
   const s = useAppState()
@@ -10,13 +11,19 @@ export function ProjectSwitcher() {
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
   const [target, setTarget] = useState(addDays(todayISO(), 60))
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   if (!ui.switcherOpen) return null
 
   const close = () => {
     ui.setSwitcherOpen(false)
     setCreating(false)
+    setSettingsOpen(false)
     setName('')
+  }
+
+  if (settingsOpen) {
+    return <ProjectSettingsSheet onClose={close} />
   }
 
   return (
@@ -24,23 +31,33 @@ export function ProjectSwitcher() {
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div style={{ fontSize: 16, fontWeight: 700 }}>Projects</div>
         {s.projects.map((p) => (
-          <button
-            key={p.id}
-            className={`sheet-row ${p.id === s.activeProjectId ? 'active' : ''}`}
-            onClick={() => {
-              actions.switchProject(p.id)
-              close()
-              ui.goTab('home')
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-                {p.phases.length} phases · {p.reports.length} reports
+          <div key={p.id} className={`sheet-row ${p.id === s.activeProjectId ? 'active' : ''}`} style={{ padding: 0 }}>
+            <button
+              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, padding: 12 }}
+              onClick={() => {
+                actions.switchProject(p.id)
+                close()
+                ui.goTab('home')
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                  {p.phases.length} phases · {p.reports.length} reports
+                </div>
               </div>
-            </div>
-            {p.id === s.activeProjectId && <Check size={18} color="var(--teal)" />}
-          </button>
+              {p.id === s.activeProjectId && <Check size={18} color="var(--teal)" />}
+            </button>
+            {p.id === s.activeProjectId && (
+              <button
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Project settings"
+                style={{ padding: '12px 14px', color: 'var(--text-2)' }}
+              >
+                <Settings size={17} />
+              </button>
+            )}
+          </div>
         ))}
         {!creating ? (
           <button className="sheet-row" onClick={() => setCreating(true)}>

@@ -12,7 +12,8 @@ Built with React + Vite + TypeScript and `vite-plugin-pwa` (Workbox), from the d
 - **Daily report (SOP)** — 5 steps: site photos (camera capture, min 3, stored in IndexedDB), manpower steppers per subcon, material usage (only in-stock materials, qty capped at stock), work summary, optional issues. Submit deducts stock, logs movements, updates spend, and files the report. One report per day; the draft persists locally until submitted and rolls over at midnight.
 - **History** — month calendar (complete / incomplete / today), report cards, full report view, **Share PDF** — a generated A4 daily-report PDF shared via the Web Share API (WhatsApp etc.) with download fallback.
 - **Drawings** — two bundled drawing sets (Sales Gallery 10 pp, Lobby 13 pp), in-app viewer, share, link-to-phase tags, and upload (PDF / image).
-- **Multiple projects** — project switcher in the header; new projects start with the standard phase template.
+- **Multiple projects** — project switcher in the header; new projects start blank and are built up in-app.
+- **Fully editable** — add/edit/delete phases (pencil icons + "Add phase") and supplies (detail-screen pencil + "Add supply", with direct stock adjustments logged as movements); project settings (via the switcher's gear) manage the project name, target date and subcontractors, delete projects, and reset the device back to the demo data.
 
 ## PWA
 

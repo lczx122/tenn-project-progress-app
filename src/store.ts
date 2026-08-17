@@ -1,8 +1,8 @@
 // App state store: plain external store + useSyncExternalStore hook.
 // State persists to IndexedDB on every change; photos/files are stored as blobs.
 import { useSyncExternalStore } from 'react'
-import type { AppState, DrawingSet, Project, Report } from './types'
-import { kvGet, kvSet, photoDelete, photoPut } from './db'
+import type { AppState, DrawingSet, Phase, Project, Report, Supply } from './types'
+import { deleteDatabase, kvGet, kvSet, photoDelete, photoPut } from './db'
 import { emptyDraft, newProject, seedState } from './seed'
 import { addDays, todayISO } from './utils/dates'
 
@@ -255,6 +255,135 @@ export const actions = {
       }
       return { ...p, supplies, reports: [report, ...p.reports], draft: { ...dr, submitted: true } }
     })
+  },
+
+  // ---- master-data editing ----
+  addPhase(name: string, subcon: string) {
+    setProject((p) => ({
+      ...p,
+      phases: [...p.phases, { id: `ph${Date.now()}`, name, subcon, status: 'todo', pct: 0 }],
+    }))
+  },
+
+  updatePhase(phaseId: string, patch: Partial<Phase>) {
+    setProject((p) => ({
+      ...p,
+      phases: p.phases.map((ph) => (ph.id === phaseId ? { ...ph, ...patch } : ph)),
+    }))
+  },
+
+  deletePhase(phaseId: string) {
+    setProject((p) => ({ ...p, phases: p.phases.filter((ph) => ph.id !== phaseId) }))
+  },
+
+  addSupply(data: Omit<Supply, 'id' | 'status' | 'ordered' | 'spent' | 'moves'>) {
+    setProject((p) => ({
+      ...p,
+      supplies: [
+        ...p.supplies,
+        {
+          ...data,
+          id: `s${Date.now()}`,
+          status: 'stock',
+          ordered: false,
+          spent: 0,
+          moves: data.stock > 0 ? [{ dateISO: todayISO(), what: 'Added to inventory', delta: data.stock }] : [],
+        },
+      ],
+    }))
+  },
+
+  /** Edit supply fields; a direct stock change is logged as a manual-adjustment movement. */
+  updateSupply(supplyId: string, patch: Partial<Supply>) {
+    setProject((p) => ({
+      ...p,
+      supplies: p.supplies.map((su) => {
+        if (su.id !== supplyId) return su
+        const next = { ...su, ...patch }
+        if (patch.stock !== undefined && patch.stock !== su.stock) {
+          next.moves = [
+            { dateISO: todayISO(), what: 'Manual adjustment', delta: patch.stock - su.stock },
+            ...su.moves,
+          ]
+        }
+        return next
+      }),
+    }))
+  },
+
+  deleteSupply(supplyId: string) {
+    setProject((p) => ({
+      ...p,
+      supplies: p.supplies.filter((su) => su.id !== supplyId),
+      draft: { ...p.draft, mats: p.draft.mats.filter((m) => m.supplyId !== supplyId) },
+    }))
+  },
+
+  updateProjectMeta(name: string, targetDateISO: string) {
+    setProject((p) => ({ ...p, name, targetDateISO }))
+  },
+
+  addSubcon(name: string, trade: string) {
+    setProject((p) => {
+      if (p.subcons.some((s) => s.name === name)) return p
+      return {
+        ...p,
+        subcons: [...p.subcons, { name, trade }],
+        draft: { ...p.draft, man: { ...p.draft.man, [name]: p.draft.man[name] ?? 0 } },
+      }
+    })
+  },
+
+  updateSubcon(oldName: string, name: string, trade: string) {
+    setProject((p) => {
+      const man = { ...p.draft.man }
+      if (oldName !== name) {
+        man[name] = man[oldName] ?? 0
+        delete man[oldName]
+      }
+      return {
+        ...p,
+        subcons: p.subcons.map((s) => (s.name === oldName ? { name, trade } : s)),
+        phases: p.phases.map((ph) => (ph.subcon === oldName ? { ...ph, subcon: name } : ph)),
+        supplies: p.supplies.map((su) => (su.usedBy === oldName ? { ...su, usedBy: name } : su)),
+        draft: { ...p.draft, man },
+      }
+    })
+  },
+
+  /** Returns false when the subcontractor is still referenced by phases or supplies. */
+  deleteSubcon(name: string): boolean {
+    const p = activeProject(getState())
+    if (p.phases.some((ph) => ph.subcon === name) || p.supplies.some((su) => su.usedBy === name)) {
+      return false
+    }
+    setProject((pr) => {
+      const man = { ...pr.draft.man }
+      delete man[name]
+      return { ...pr, subcons: pr.subcons.filter((s) => s.name !== name), draft: { ...pr.draft, man } }
+    })
+    return true
+  },
+
+  /** Returns false when it is the only project. */
+  deleteProject(id: string): boolean {
+    if (getState().projects.length <= 1) return false
+    set((s) => {
+      const projects = s.projects.filter((p) => p.id !== id)
+      return {
+        ...s,
+        projects,
+        activeProjectId: s.activeProjectId === id ? projects[0].id : s.activeProjectId,
+      }
+    })
+    return true
+  },
+
+  /** Wipe everything (state, photos, uploads) and reload back to the demo seed. */
+  async resetApp(): Promise<void> {
+    clearTimeout(persistTimer)
+    await deleteDatabase()
+    location.reload()
   },
 
   addDrawing(set_: DrawingSet) {

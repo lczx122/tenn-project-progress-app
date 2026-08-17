@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { activeProject, useAppState } from '../store'
 import { useUi } from '../ui'
 import { isLow } from '../selectors'
 import { fmtShort } from '../utils/dates'
+import { SupplyEditSheet } from '../components/SupplyEditSheet'
 
 export function Supplies() {
   const s = useAppState()
   const ui = useUi()
+  const [adding, setAdding] = useState(false)
   const p = activeProject(s)
   const sf = ui.supplyFilter
   const q = ui.query.toLowerCase()
@@ -94,7 +97,16 @@ export function Supplies() {
             No materials match
           </div>
         )}
+
+        <button
+          style={{ border: '1.5px dashed #C9C4BA', borderRadius: 12, padding: 14, textAlign: 'center', color: 'var(--teal)', fontSize: 13, fontWeight: 600, width: '100%' }}
+          onClick={() => setAdding(true)}
+        >
+          + Add supply
+        </button>
       </div>
+
+      {adding && <SupplyEditSheet onClose={() => setAdding(false)} />}
     </>
   )
 }
