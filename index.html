@@ -3,6 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      // iOS auto-zooms when focusing inputs with font-size < 16px and stays zoomed
+      // afterwards. Capping maximum-scale suppresses that auto-zoom; since iOS 10
+      // Safari ignores the cap for user pinch gestures, so manual zoom still works.
+      // Applied only on iOS — Android browsers would actually enforce the cap.
+      (function () {
+        var isIOS =
+          /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+          (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1)
+        if (isIOS) {
+          document
+            .querySelector('meta[name="viewport"]')
+            .setAttribute(
+              'content',
+              'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'
+            )
+        }
+      })()
+    </script>
     <meta name="theme-color" content="#0F766E" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
