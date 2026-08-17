@@ -78,7 +78,8 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
 .screen {
   height: 100%; overflow-y: auto; display: flex; flex-direction: column;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(78px + env(safe-area-inset-bottom, 12px));
+  /* clears the tab bar plus the floating WhatsApp button */
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 12px));
 }
 
 .mono { font-family: var(--mono); font-weight: 500; }
@@ -211,6 +212,15 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
 .pdf-page-no {
   position: absolute; bottom: 6px; right: 8px; font-size: 10px; font-weight: 600;
   color: var(--text-2); background: rgba(255, 255, 255, 0.85); border-radius: 4px; padding: 1px 6px;
+}
+
+/* ---- WhatsApp floating button ---- */
+.wa-fab {
+  position: absolute; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom, 12px));
+  width: 52px; height: 52px; border-radius: 50%; z-index: 20;
+  background: #25d366; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(27, 31, 30, 0.28);
 }
 
 /* ---- sync indicators ---- */

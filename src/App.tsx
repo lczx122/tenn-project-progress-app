@@ -3,6 +3,7 @@ import { useUi, type StackItem, type Tab } from './ui'
 import { TabBar } from './components/TabBar'
 import { Toast } from './components/Toast'
 import { ProjectSwitcher } from './components/ProjectSwitcher'
+import { WhatsAppFab } from './components/WhatsAppFab'
 import { PushedLayer } from './components/PushedLayer'
 import { Home } from './screens/Home'
 import { Phases } from './screens/Phases'
@@ -93,6 +94,7 @@ export default function App() {
           </div>
         ))}
       </div>
+      <WhatsAppFab />
       <TabBar />
       {pdfTop && <PdfViewer drawingId={pdfTop.drawingId} />}
       <ProjectSwitcher />
