@@ -77,8 +77,8 @@ check('phase: remove section', await gone('.card:has-text("Audit Phase") >> text
 const pantry = page.locator('.card:has-text("Pantry")')
 check(
   'phase: sections per subcon',
-  (await pantry.locator('.tag:has-text("Ah Kang")').count()) === 1 &&
-    (await pantry.locator('.tag:has-text("Classic Home")').count()) === 1 &&
+  (await pantry.locator('[aria-label="Ah Kang"]').count()) === 1 &&
+    (await pantry.locator('[aria-label="Classic Home"]').count()) === 1 &&
     (await pantry.locator('button[aria-label="Advance Wiring first fix"]').count()) === 1,
 )
 // advancing one section leaves the other untouched (Ongoing→Finished; 50% → 67%)
@@ -140,9 +140,9 @@ await page.waitForTimeout(600)
 const meetingCard = page.locator('.card:has-text("Audit Meeting")')
 check(
   'task: add with multiple subcon tags',
-  (await meetingCard.locator('.tag:has-text("Ah Kang")').count()) === 1 &&
-    (await meetingCard.locator('.tag:has-text("Hock Heng")').count()) === 1 &&
-    (await meetingCard.locator('button:has-text("Mark done")').count()) === 1,
+  (await meetingCard.locator('[aria-label="Ah Kang"]').count()) === 1 &&
+    (await meetingCard.locator('[aria-label="Hock Heng"]').count()) === 1 &&
+    (await meetingCard.locator('button[aria-label="Mark Audit Meeting done"]').count()) === 1,
 )
 await page.click('.chip:has-text("Hock Heng")')
 await page.waitForTimeout(200)
@@ -150,17 +150,17 @@ check('task: appears under tagged subcon filter', await page.isVisible('.card:ha
 await page.click('.chip:has-text("All")')
 await page.click('button[aria-label="Mark Audit Meeting done"]')
 await page.waitForTimeout(2600)
-check(
-  'task: mark done',
-  (await meetingCard.locator('button:has-text("Mark done")').count()) === 0 &&
-    (await meetingCard.locator('text=✓').count()) === 1,
-)
+check('task: mark done collapses into completed cluster', (await page.locator('.card:has-text("Audit Meeting")').count()) === 0)
+// expand the cluster of the last group to reveal it
+await page.locator('.done-cluster').last().click()
+await page.waitForTimeout(400)
+check('task: expand completed cluster', await page.isVisible('.card:has-text("Audit Meeting")'))
 await page.locator('button[aria-label="Edit Audit Meeting"]').click()
 await page.waitForTimeout(500)
 await page.click('.sheet .chip:has-text("Pending")')
 await page.click('.sheet button:has-text("Save changes")')
 await page.waitForTimeout(600)
-check('task: reopen to pending', (await meetingCard.locator('button:has-text("Mark done")').count()) === 1)
+check('task: reopen to pending', (await meetingCard.locator('button[aria-label="Mark Audit Meeting done"]').count()) === 1)
 await page.locator('button[aria-label="Edit Audit Meeting"]').click()
 await page.waitForTimeout(500)
 await page.click('.sheet button:has-text("Delete item")')
@@ -183,6 +183,8 @@ async function dragGrip(cardText, targetY, steps = 16) {
 // cross-phase: Material Prep (Phase 1) → just below Backdrop 01 (Phase 2)
 await page.evaluate(() => { document.querySelector('.stack-base .screen').scrollTop = 0 })
 await page.waitForTimeout(300)
+await page.locator('.done-cluster').first().click()
+await page.waitForTimeout(400)
 const b01 = await page.locator('.card:has-text("Backdrop 01")').boundingBox()
 await dragGrip('Material Prep', b01.y + b01.height + 6)
 check('drag: move item across phases', (await page.isVisible('text=2/2')) && (await page.isVisible('text=1/9')))

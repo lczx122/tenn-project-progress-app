@@ -1,15 +1,16 @@
 import { useRef, useState } from 'react'
-import { GripVertical, Pencil, Users } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Circle, GripVertical, Pencil, Users } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { PhaseEditSheet } from '../components/PhaseEditSheet'
 import { DividerEditSheet } from '../components/DividerEditSheet'
+import { SubAvatar, SubStack } from '../components/SubAvatars'
 import { phaseHasSubcon, phasePct, phaseStatus } from '../selectors'
 import { haptic } from '../utils/motion'
 import type { Phase, PhaseDivider, SectionStatus } from '../types'
 
 const STATUS_META: Record<SectionStatus, { label: string; bg: string; fg: string; bd: string }> = {
-  todo: { label: 'Not started', bg: '#fff', fg: 'var(--text-2)', bd: 'var(--card-bd)' },
+  todo: { label: 'Start', bg: '#fff', fg: 'var(--text-2)', bd: 'var(--card-bd)' },
   started: { label: 'Started', bg: 'var(--warn-bg)', fg: 'var(--warn)', bd: 'var(--warn-bd)' },
   ongoing: { label: 'Ongoing', bg: 'var(--info-bg)', fg: 'var(--info)', bd: '#C7D4EE' },
   done: { label: 'Finished ✓', bg: 'var(--teal-tint)', fg: 'var(--teal)', bd: 'var(--teal-tint-bd)' },
@@ -29,6 +30,8 @@ export function Phases() {
   const [editing, setEditing] = useState<string | null>(null)
   // divider edit: null = closed, '' = adding, otherwise divider id
   const [editingDivider, setEditingDivider] = useState<string | null>(null)
+  // groups whose completed items are expanded
+  const [expandedDone, setExpandedDone] = useState<Set<string>>(new Set())
 
   const matches = (ph: Phase) => pf === 'All' || phaseHasSubcon(ph, pf)
 
@@ -195,10 +198,8 @@ export function Phases() {
     const meta = STATUS_META[sec.status]
     return (
       <div key={sec.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sec.name}</div>
-          <div className="tag" style={{ display: 'inline-block', marginTop: 3 }}>{sec.subcon}</div>
-        </div>
+        <SubAvatar name={sec.subcon} />
+        <div style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sec.name}</div>
         {sec.status === 'done' ? (
           <div className="badge" style={{ background: meta.bg, color: meta.fg, border: `1px solid ${meta.bd}`, padding: '5px 10px' }}>
             {meta.label}
@@ -207,7 +208,7 @@ export function Phases() {
           <button
             aria-label={`Advance ${sec.name}`}
             className="badge pressable"
-            style={{ background: meta.bg, color: meta.fg, border: `1px solid ${meta.bd}`, padding: '5px 10px', minWidth: 92, textAlign: 'center' }}
+            style={{ background: meta.bg, color: meta.fg, border: `1px solid ${meta.bd}`, padding: '5px 10px', minWidth: 76, textAlign: 'center' }}
             onClick={() => advance(ph, sec.id)}
           >
             {meta.label} ›
@@ -231,47 +232,40 @@ export function Phases() {
       )
     }
     if (ph.kind === 'task') {
-      // pending meeting/task: name + tagged subcons + mark done
+      // pending meeting/task: one line — avatars say who, the circle marks it done
       return (
-        <div key={ph.id} className="card" style={{ padding: '12px 14px' }}>
+        <div key={ph.id} className="card" style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {grip}
-            <Users size={14} color="var(--muted)" style={{ flexShrink: 0 }} />
-            <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
+            <Users size={13} color="var(--muted)" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ph.name}</div>
+            <SubStack names={ph.taskSubcons ?? []} />
             {editBtn(ph)}
             <button
               aria-label={`Mark ${ph.name} done`}
-              style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px', flexShrink: 0 }}
+              style={{ color: 'var(--teal)', display: 'flex', padding: 2, flexShrink: 0 }}
               onClick={() => {
                 actions.setTaskDone(ph.id, true)
                 haptic(10)
                 ui.showToast(`${ph.name} done ✓`)
               }}
             >
-              Mark done
+              <Circle size={22} strokeWidth={1.6} />
             </button>
           </div>
-          {(ph.taskSubcons ?? []).length > 0 && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              {(ph.taskSubcons ?? []).map((sc) => (
-                <div key={sc} className="tag">{sc}</div>
-              ))}
-            </div>
-          )}
-          {ph.note && <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 8 }}>{ph.note}</div>}
+          {ph.note && <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 6, paddingLeft: 26 }}>{ph.note}</div>}
         </div>
       )
     }
     if (status === 'todo') {
       const subcons = [...new Set(ph.sections.map((sec) => sec.subcon))]
-      const multi = subcons.length > 1
       return (
-        <div key={ph.id} className="card" style={{ padding: '12px 14px' }}>
+        <div key={ph.id} className="card" style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {grip}
-            <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
+            <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ph.name}</div>
+            <SubStack names={subcons} />
             {editBtn(ph)}
-            {!multi && subcons[0] && <div className="tag" style={{ flexShrink: 0 }}>{subcons[0]}</div>}
             <button
               style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px', flexShrink: 0 }}
               onClick={() => {
@@ -282,13 +276,6 @@ export function Phases() {
               Start
             </button>
           </div>
-          {multi && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              {subcons.map((sc) => (
-                <div key={sc} className="tag">{sc}</div>
-              ))}
-            </div>
-          )}
         </div>
       )
     }
@@ -333,10 +320,22 @@ export function Phases() {
         {groups.map((g, gi) => {
           const visible = g.items.filter(matches)
           if (g.divider && pf !== 'All' && visible.length === 0) return null
+          const activeItems = visible.filter((ph) => phaseStatus(ph) !== 'done')
+          const doneItems = visible.filter((ph) => phaseStatus(ph) === 'done')
           const doneCount = g.items.filter((ph) => phaseStatus(ph) === 'done').length
           const avg = g.items.length
             ? Math.round(g.items.reduce((a, ph) => a + phasePct(ph), 0) / g.items.length)
             : 0
+          const groupKey = g.divider?.id ?? 'lead'
+          const doneOpen = expandedDone.has(groupKey)
+          const toggleDone = () => {
+            setExpandedDone((prev) => {
+              const next = new Set(prev)
+              if (next.has(groupKey)) next.delete(groupKey)
+              else next.add(groupKey)
+              return next
+            })
+          }
           return (
             <div key={g.divider?.id ?? `head-${gi}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {g.divider && (
@@ -356,14 +355,31 @@ export function Phases() {
                       <Pencil size={13} />
                     </button>
                   </div>
-                  <div style={{ height: 1, background: 'var(--card-bd)', marginTop: 6 }} />
+                  <div className="bar" style={{ height: 3, marginTop: 7 }}>
+                    <div style={{ width: `${avg}%` }} />
+                  </div>
                 </div>
               )}
-              {visible.map((ph) => (
+              {activeItems.map((ph) => (
                 <div key={ph.id} data-drag-item data-group={gi} data-index={g.items.indexOf(ph)}>
                   {itemCard(ph, gripFor(ph))}
                 </div>
               ))}
+              {doneItems.length > 0 && (
+                <>
+                  <button className={`card done-cluster ${doneOpen ? 'open' : ''}`} onClick={toggleDone} aria-label={`Toggle completed items`}>
+                    <CheckCircle2 size={15} color="var(--teal)" />
+                    <span style={{ flex: 1, textAlign: 'left' }}>{doneItems.length} completed</span>
+                    <span className="chev"><ChevronDown size={15} /></span>
+                  </button>
+                  {doneOpen &&
+                    doneItems.map((ph) => (
+                      <div key={ph.id} data-drag-item data-group={gi} data-index={g.items.indexOf(ph)}>
+                        {itemCard(ph, gripFor(ph))}
+                      </div>
+                    ))}
+                </>
+              )}
               {g.divider && g.items.length === 0 && (
                 <div data-empty-slot data-group={gi} style={{ fontSize: 12, color: 'var(--muted)', padding: '2px 2px 6px' }}>No items in this phase yet</div>
               )}
