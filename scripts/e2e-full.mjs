@@ -128,6 +128,46 @@ await page.click('.sheet button:has-text("Tap again to confirm")')
 await page.waitForTimeout(2600)
 check('divider: delete merges items back', await gone('text=Renamed Divider'))
 
+// ---------- Meeting/Task items: add / filter / mark done / reopen / delete ----------
+await page.click('text=+ Add item')
+await page.waitForTimeout(500)
+await page.click('.sheet .chip:has-text("Meeting / Task")')
+await page.fill('input[placeholder="e.g. Backdrop 05"]', 'Audit Meeting')
+await page.click('.sheet .chip:has-text("Ah Kang")')
+await page.click('.sheet .chip:has-text("Hock Heng")')
+await page.click('.sheet .primary-btn')
+await page.waitForTimeout(600)
+const meetingCard = page.locator('.card:has-text("Audit Meeting")')
+check(
+  'task: add with multiple subcon tags',
+  (await meetingCard.locator('.tag:has-text("Ah Kang")').count()) === 1 &&
+    (await meetingCard.locator('.tag:has-text("Hock Heng")').count()) === 1 &&
+    (await meetingCard.locator('button:has-text("Mark done")').count()) === 1,
+)
+await page.click('.chip:has-text("Hock Heng")')
+await page.waitForTimeout(200)
+check('task: appears under tagged subcon filter', await page.isVisible('.card:has-text("Audit Meeting")'))
+await page.click('.chip:has-text("All")')
+await page.click('button[aria-label="Mark Audit Meeting done"]')
+await page.waitForTimeout(2600)
+check(
+  'task: mark done',
+  (await meetingCard.locator('button:has-text("Mark done")').count()) === 0 &&
+    (await meetingCard.locator('text=✓').count()) === 1,
+)
+await page.locator('button[aria-label="Edit Audit Meeting"]').click()
+await page.waitForTimeout(500)
+await page.click('.sheet .chip:has-text("Pending")')
+await page.click('.sheet button:has-text("Save changes")')
+await page.waitForTimeout(600)
+check('task: reopen to pending', (await meetingCard.locator('button:has-text("Mark done")').count()) === 1)
+await page.locator('button[aria-label="Edit Audit Meeting"]').click()
+await page.waitForTimeout(500)
+await page.click('.sheet button:has-text("Delete item")')
+await page.click('.sheet button:has-text("Tap again to confirm")')
+await page.waitForTimeout(2600)
+check('task: delete', await gone('.card:has-text("Audit Meeting")'))
+
 // ---------- Supplies: add / search / edit stock / delete ----------
 await page.click('nav >> text=Supplies')
 await page.click('text=+ Add supply')

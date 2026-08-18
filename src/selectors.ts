@@ -14,18 +14,22 @@ export function nextSectionStatus(status: SectionStatus): SectionStatus {
 }
 
 export function phasePct(p: Phase): number {
+  if (p.kind === 'task') return p.taskDone ? 100 : 0
   if (p.sections.length === 0) return 0
   return Math.round((p.sections.reduce((a, s) => a + sectionWeight(s.status), 0) / p.sections.length) * 100)
 }
 
-/** Done only when every section is finished; in progress once any section has started. */
+/** Work: done when every section is finished, in progress once any started.
+ *  Task: pending or done — never "in progress". */
 export function phaseStatus(p: Phase): PhaseStatus {
+  if (p.kind === 'task') return p.taskDone ? 'done' : 'todo'
   if (p.sections.length > 0 && p.sections.every((s) => s.status === 'done')) return 'done'
   if (p.sections.some((s) => s.status !== 'todo')) return 'prog'
   return 'todo'
 }
 
 export function phaseHasSubcon(p: Phase, name: string): boolean {
+  if (p.kind === 'task') return (p.taskSubcons ?? []).includes(name)
   return p.sections.some((s) => s.subcon === name)
 }
 

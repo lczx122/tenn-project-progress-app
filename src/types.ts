@@ -11,12 +11,20 @@ export interface PhaseSection {
   status: SectionStatus
 }
 
-/** A work item (card on the Phases screen). Progress is the average of its
- *  section statuses; done when every section is finished. */
+/** An item card on the Phases screen.
+ *  - kind 'work': progress is the average of its section statuses; done when
+ *    every section is finished.
+ *  - kind 'task' (meetings etc.): tags multiple subcons; simply pending or
+ *    done, counting 0% or 100% toward its phase. */
 export interface Phase {
   id: string
   name: string
+  kind: 'work' | 'task'
   sections: PhaseSection[]
+  /** task items: the subcontractors involved */
+  taskSubcons?: string[]
+  /** task items: completed? */
+  taskDone?: boolean
   note?: string
   blocked?: boolean
 }

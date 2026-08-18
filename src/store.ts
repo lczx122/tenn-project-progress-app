@@ -142,8 +142,9 @@ function migrateState(s: AppState): AppState {
       version: 4,
       projects: out.projects.map((p) => ({
         ...p,
+        // intermediate v4 shape (no kind yet); the v6 step below adds it
         phases: (p.phases as unknown as LegacyWorkPhase[]).map((ph) => {
-          if (ph.sections) return ph as Phase
+          if (ph.sections) return ph
           return {
             id: ph.id, name: ph.name, note: ph.note, blocked: ph.blocked,
             sections: (ph.work ?? []).map((w, i) => ({
@@ -153,7 +154,7 @@ function migrateState(s: AppState): AppState {
               status: toStatus(w.pct),
             })),
           }
-        }),
+        }) as unknown as Phase[],
       })),
     }
   }
@@ -163,6 +164,17 @@ function migrateState(s: AppState): AppState {
       ...out,
       version: 5,
       projects: out.projects.map((p) => ({ ...p, dividers: p.dividers ?? [] })),
+    }
+  }
+  // v5 → v6: items gain a kind — existing ones are all work items
+  if (out.version < 6) {
+    out = {
+      ...out,
+      version: 6,
+      projects: out.projects.map((p) => ({
+        ...p,
+        phases: p.phases.map((ph) => ({ ...ph, kind: ph.kind ?? 'work' })),
+      })),
     }
   }
   return out
@@ -360,8 +372,25 @@ export const actions = {
       ...p,
       phases: [
         ...p.phases,
-        { id: `ph${base}`, name, sections: sections.map((s, i) => ({ id: `ph${base}-s${i + 1}`, ...s })) },
+        { id: `ph${base}`, name, kind: 'work', sections: sections.map((s, i) => ({ id: `ph${base}-s${i + 1}`, ...s })) },
       ],
+    }))
+  },
+
+  addTask(name: string, taskSubcons: string[]) {
+    setProject((p) => ({
+      ...p,
+      phases: [
+        ...p.phases,
+        { id: `ph${Date.now()}`, name, kind: 'task', sections: [], taskSubcons, taskDone: false },
+      ],
+    }))
+  },
+
+  setTaskDone(phaseId: string, done: boolean) {
+    setProject((p) => ({
+      ...p,
+      phases: p.phases.map((ph) => (ph.id === phaseId ? { ...ph, taskDone: done } : ph)),
     }))
   },
 
@@ -475,6 +504,7 @@ export const actions = {
         phases: p.phases.map((ph) => ({
           ...ph,
           sections: ph.sections.map((s) => (s.subcon === oldName ? { ...s, subcon: name } : s)),
+          taskSubcons: ph.taskSubcons?.map((n) => (n === oldName ? name : n)),
         })),
         supplies: p.supplies.map((su) => (su.usedBy === oldName ? { ...su, usedBy: name } : su)),
         draft: { ...p.draft, man },
@@ -485,7 +515,10 @@ export const actions = {
   /** Returns false when the subcontractor is still referenced by phases or supplies. */
   deleteSubcon(name: string): boolean {
     const p = activeProject(getState())
-    if (p.phases.some((ph) => ph.sections.some((s) => s.subcon === name)) || p.supplies.some((su) => su.usedBy === name)) {
+    if (
+      p.phases.some((ph) => ph.sections.some((s) => s.subcon === name) || (ph.taskSubcons ?? []).includes(name)) ||
+      p.supplies.some((su) => su.usedBy === name)
+    ) {
       return false
     }
     setProject((pr) => {

@@ -29,6 +29,9 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
   const existing = phaseId ? p.phases.find((ph) => ph.id === phaseId) : undefined
 
   const [name, setName] = useState(existing?.name ?? '')
+  const [kind, setKind] = useState<'work' | 'task'>(existing?.kind ?? 'work')
+  const [taskSubcons, setTaskSubcons] = useState<string[]>(existing?.taskSubcons ?? [])
+  const [taskDone, setTaskDone] = useState(existing?.taskDone ?? false)
   const [note, setNote] = useState(existing?.note ?? '')
   const [blocked, setBlocked] = useState(existing?.blocked ?? false)
   const [sections, setSections] = useState<DraftSection[]>(
@@ -52,19 +55,40 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
     setSections((list) => list.filter((sec) => sec.id !== id))
   }
 
-  const valid = name.trim().length > 0 && sections.length > 0 && sections.every((sec) => sec.name.trim() && sec.subcon)
+  const valid =
+    name.trim().length > 0 &&
+    (kind === 'task'
+      ? taskSubcons.length > 0
+      : sections.length > 0 && sections.every((sec) => sec.name.trim() && sec.subcon))
+
+  const toggleTaskSubcon = (sub: string) => {
+    setTaskSubcons((list) => (list.includes(sub) ? list.filter((x) => x !== sub) : [...list, sub]))
+  }
 
   const save = (close: () => void) => {
-    const cleaned = sections.map((sec) => ({ ...sec, name: sec.name.trim() }))
     if (existing) {
-      actions.updatePhase(existing.id, {
-        name: name.trim(),
-        sections: cleaned,
-        note: note.trim() || undefined,
-        blocked,
-      })
+      if (kind === 'task') {
+        actions.updatePhase(existing.id, {
+          name: name.trim(),
+          taskSubcons,
+          taskDone,
+          note: note.trim() || undefined,
+        })
+      } else {
+        const cleaned = sections.map((sec) => ({ ...sec, name: sec.name.trim() }))
+        actions.updatePhase(existing.id, {
+          name: name.trim(),
+          sections: cleaned,
+          note: note.trim() || undefined,
+          blocked,
+        })
+      }
       ui.showToast('Item updated')
+    } else if (kind === 'task') {
+      actions.addTask(name.trim(), taskSubcons)
+      ui.showToast(`${name.trim()} added`)
     } else {
+      const cleaned = sections.map((sec) => ({ ...sec, name: sec.name.trim() }))
       actions.addPhase(name.trim(), cleaned.map(({ name: n, subcon, status }) => ({ name: n, subcon, status })))
       ui.showToast(`${name.trim()} added`)
     }
@@ -81,7 +105,56 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
 
           <TextField label="Item name" value={name} onChange={setName} placeholder="e.g. Backdrop 05" />
 
-          {p.subcons.length === 0 ? (
+          {!existing && (
+            <Field label="Item type">
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" className={`chip ${kind === 'work' ? 'active' : ''}`} onClick={() => setKind('work')}>
+                  Work
+                </button>
+                <button type="button" className={`chip ${kind === 'task' ? 'active' : ''}`} onClick={() => setKind('task')}>
+                  Meeting / Task
+                </button>
+              </div>
+            </Field>
+          )}
+
+          {kind === 'task' ? (
+            p.subcons.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--warn)', marginTop: 10 }}>
+                No subcontractors yet — add them in project settings first.
+              </div>
+            ) : (
+              <>
+                <Field label="Tag subcontractors involved">
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {p.subcons.map((g) => (
+                      <button
+                        key={g.name}
+                        type="button"
+                        className={`chip ${taskSubcons.includes(g.name) ? 'active' : ''}`}
+                        style={{ padding: '5px 12px' }}
+                        onClick={() => toggleTaskSubcon(g.name)}
+                      >
+                        {g.name}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+                {existing && (
+                  <Field label="Status">
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" className={`chip ${!taskDone ? 'active' : ''}`} onClick={() => setTaskDone(false)}>
+                        Pending
+                      </button>
+                      <button type="button" className={`chip ${taskDone ? 'active' : ''}`} onClick={() => setTaskDone(true)}>
+                        Done
+                      </button>
+                    </div>
+                  </Field>
+                )}
+              </>
+            )
+          ) : p.subcons.length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--warn)', marginTop: 10 }}>
               No subcontractors yet — add them in project settings first.
             </div>

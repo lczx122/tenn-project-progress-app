@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, Users } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { PhaseEditSheet } from '../components/PhaseEditSheet'
@@ -98,9 +98,41 @@ export function Phases() {
     if (status === 'done') {
       return (
         <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          {ph.kind === 'task' && <Users size={13} color="var(--muted)" style={{ flexShrink: 0 }} />}
           <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', textDecoration: 'line-through', flex: 1, minWidth: 0 }}>{ph.name}</div>
           {editBtn(ph)}
           <div style={{ color: 'var(--teal)', fontSize: 15 }}>✓</div>
+        </div>
+      )
+    }
+    if (ph.kind === 'task') {
+      // pending meeting/task: name + tagged subcons + mark done
+      return (
+        <div key={ph.id} className="card" style={{ padding: '12px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Users size={14} color="var(--muted)" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
+            {editBtn(ph)}
+            <button
+              aria-label={`Mark ${ph.name} done`}
+              style={{ fontSize: 12, fontWeight: 700, color: 'var(--teal)', border: '1px solid var(--teal-tint-bd)', borderRadius: 6, padding: '3px 9px', flexShrink: 0 }}
+              onClick={() => {
+                actions.setTaskDone(ph.id, true)
+                haptic(10)
+                ui.showToast(`${ph.name} done ✓`)
+              }}
+            >
+              Mark done
+            </button>
+          </div>
+          {(ph.taskSubcons ?? []).length > 0 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+              {(ph.taskSubcons ?? []).map((sc) => (
+                <div key={sc} className="tag">{sc}</div>
+              ))}
+            </div>
+          )}
+          {ph.note && <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 8 }}>{ph.note}</div>}
         </div>
       )
     }
