@@ -63,7 +63,7 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
         note: note.trim() || undefined,
         blocked,
       })
-      ui.showToast('Phase updated')
+      ui.showToast('Item updated')
     } else {
       actions.addPhase(name.trim(), cleaned.map(({ name: n, subcon, status }) => ({ name: n, subcon, status })))
       ui.showToast(`${name.trim()} added`)
@@ -77,9 +77,9 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
     <Sheet onClosed={onClose}>
       {(close) => (
         <>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>{existing ? 'Edit phase' : 'Add phase'}</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{existing ? 'Edit item' : 'Add item'}</div>
 
-          <TextField label="Phase name" value={name} onChange={setName} placeholder="e.g. Backdrop 05" />
+          <TextField label="Item name" value={name} onChange={setName} placeholder="e.g. Backdrop 05" />
 
           {p.subcons.length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--warn)', marginTop: 10 }}>
@@ -172,11 +172,11 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
             <button className="primary-btn" disabled={!valid} onClick={() => save(close)}>
-              {existing ? 'Save changes' : 'Add phase'}
+              {existing ? 'Save changes' : 'Add item'}
             </button>
             {existing && (
               <ConfirmButton
-                label="Delete phase"
+                label="Delete item"
                 onConfirm={() => {
                   actions.deletePhase(existing.id)
                   ui.showToast(`${existing.name} deleted`)

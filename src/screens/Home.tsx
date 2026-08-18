@@ -167,7 +167,7 @@ export function Home() {
             <div style={{ width: `${overallPct(p)}%` }} />
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 8 }}>
-            {inProg} in progress · {doneCount} of {p.phases.length} done · target {fmtShort(p.targetDateISO)}
+            {inProg} in progress · {doneCount} of {p.phases.length} items done · target {fmtShort(p.targetDateISO)}
           </div>
         </div>
 
@@ -182,7 +182,7 @@ export function Home() {
                 return (
                   <button key={g.name} className="card" style={{ padding: 12 }} onClick={() => ui.goPhases(g.name)}>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{g.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{g.trade} · {count} phases</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{g.trade} · {count} items</div>
                     <div className="bar" style={{ height: 5, marginTop: 8 }}>
                       <div style={{ width: `${pct}%` }} />
                     </div>

@@ -111,7 +111,7 @@ export function Drawings() {
               <button className="link-btn" onClick={() => share(ds)} disabled={sharing === ds.id}>
                 {sharing === ds.id ? 'Preparing…' : 'Share ↗'}
               </button>
-              <button className="link-btn" onClick={() => setLinking(ds.id)}>Link to phase</button>
+              <button className="link-btn" onClick={() => setLinking(ds.id)}>Link to item</button>
             </div>
           </div>
         ))}
@@ -136,8 +136,8 @@ export function Drawings() {
         <Sheet onClosed={() => setLinking(null)}>
           {() => (
             <>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>Link to phase</div>
-              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Tap to add or remove a phase tag</div>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Link to item</div>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>Tap to add or remove an item tag</div>
               {p.phases.map((ph) => {
                 const ds = p.drawings.find((d) => d.id === linking)
                 const active = !!ds?.tags.includes(ph.name)

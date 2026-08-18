@@ -33,6 +33,7 @@ export function newProject(id: string, name: string, targetDateISO: string): Pro
     whatsappUrl: '',
     subcons: [],
     phases: [],
+    dividers: [],
     supplies: [],
     reports: [],
     drawings: [],
@@ -90,6 +91,11 @@ export function seedState(): AppState {
       { id: 'ph14', name: 'Sitting Area 02', sections: [{ id: 'ph14-s1', name: 'Main works', subcon: 'Ah Kang', status: 'todo' }] },
       { id: 'ph15', name: 'Type Unit Signage A/B', sections: [{ id: 'ph15-s1', name: 'Main works', subcon: 'Hock Heng', status: 'todo' }] },
       { id: 'ph16', name: 'Advertising Board', sections: [{ id: 'ph16-s1', name: 'Main works', subcon: 'Hock Heng', status: 'todo' }] },
+    ],
+    dividers: [
+      { id: 'dv1', name: 'Phase 1 — Preparation', beforeItemId: 'ph1' },
+      { id: 'dv2', name: 'Phase 2 — Main works', beforeItemId: 'ph4' },
+      { id: 'dv3', name: 'Phase 3 — Finishing & signage', beforeItemId: 'ph12' },
     ],
     supplies: [
       {
@@ -186,5 +192,5 @@ export function seedState(): AppState {
     draft: emptyDraft(SUBCONS),
   }
 
-  return { version: 4, projects: [project], activeProjectId: 'p1' }
+  return { version: 5, projects: [project], activeProjectId: 'p1' }
 }

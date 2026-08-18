@@ -157,6 +157,14 @@ function migrateState(s: AppState): AppState {
       })),
     }
   }
+  // v4 → v5: phase dividers grouping the item list
+  if (out.version < 5) {
+    out = {
+      ...out,
+      version: 5,
+      projects: out.projects.map((p) => ({ ...p, dividers: p.dividers ?? [] })),
+    }
+  }
   return out
 }
 
@@ -365,7 +373,35 @@ export const actions = {
   },
 
   deletePhase(phaseId: string) {
-    setProject((p) => ({ ...p, phases: p.phases.filter((ph) => ph.id !== phaseId) }))
+    setProject((p) => {
+      const idx = p.phases.findIndex((ph) => ph.id === phaseId)
+      const nextId = idx >= 0 ? (p.phases[idx + 1]?.id ?? null) : null
+      return {
+        ...p,
+        phases: p.phases.filter((ph) => ph.id !== phaseId),
+        // dividers anchored to the deleted item slide to the next one
+        dividers: p.dividers.map((d) => (d.beforeItemId === phaseId ? { ...d, beforeItemId: nextId } : d)),
+      }
+    })
+  },
+
+  // ---- phase dividers ----
+  addDivider(name: string, beforeItemId: string | null) {
+    setProject((p) => ({
+      ...p,
+      dividers: [...p.dividers, { id: `dv${Date.now()}`, name, beforeItemId }],
+    }))
+  },
+
+  updateDivider(dividerId: string, patch: { name?: string; beforeItemId?: string | null }) {
+    setProject((p) => ({
+      ...p,
+      dividers: p.dividers.map((d) => (d.id === dividerId ? { ...d, ...patch } : d)),
+    }))
+  },
+
+  deleteDivider(dividerId: string) {
+    setProject((p) => ({ ...p, dividers: p.dividers.filter((d) => d.id !== dividerId) }))
   },
 
   addSupply(data: Omit<Supply, 'id' | 'status' | 'ordered' | 'spent' | 'moves'>) {

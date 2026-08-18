@@ -11,13 +11,22 @@ export interface PhaseSection {
   status: SectionStatus
 }
 
+/** A work item (card on the Phases screen). Progress is the average of its
+ *  section statuses; done when every section is finished. */
 export interface Phase {
   id: string
   name: string
-  /** Progress is the average of section statuses; done when every section is finished. */
   sections: PhaseSection[]
   note?: string
   blocked?: boolean
+}
+
+/** Divider that starts a phase group in the item list. */
+export interface PhaseDivider {
+  id: string
+  name: string
+  /** The item this divider sits before; null → after the last item. */
+  beforeItemId: string | null
 }
 
 export interface Movement {
@@ -105,7 +114,10 @@ export interface Project {
   /** Team chat link for the floating WhatsApp button; empty hides the button. */
   whatsappUrl?: string
   subcons: Subcon[]
+  /** Work items, in display order. */
   phases: Phase[]
+  /** Dividers grouping the items into phases. */
+  dividers: PhaseDivider[]
   supplies: Supply[]
   reports: Report[]
   drawings: DrawingSet[]
