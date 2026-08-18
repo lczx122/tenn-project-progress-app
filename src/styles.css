@@ -214,6 +214,26 @@ textarea:focus, input:focus { outline: 2px solid var(--teal); }
   color: var(--text-2); background: rgba(255, 255, 255, 0.85); border-radius: 4px; padding: 1px 6px;
 }
 
+/* ---- drag & drop reordering ---- */
+.drag-grip {
+  color: var(--muted); cursor: grab; touch-action: none;
+  padding: 4px 2px; margin: -4px 0 -4px -6px; flex-shrink: 0;
+  display: flex; align-items: center;
+}
+.drag-grip:active { cursor: grabbing; }
+[data-drag-item] { position: relative; }
+[data-drag-item].drag-float {
+  z-index: 30;
+  box-shadow: 0 16px 40px rgba(27, 31, 30, 0.28);
+  border-radius: 12px;
+  opacity: 0.96;
+}
+.drop-indicator {
+  position: absolute; left: 4px; right: 4px; height: 3px; border-radius: 2px;
+  background: var(--teal); z-index: 25; pointer-events: none; display: none;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+}
+
 /* ---- WhatsApp floating button ---- */
 .wa-fab {
   position: absolute; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom, 12px));

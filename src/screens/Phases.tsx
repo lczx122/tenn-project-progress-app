@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Pencil, Users } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { GripVertical, Pencil, Users } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { PhaseEditSheet } from '../components/PhaseEditSheet'
@@ -32,13 +32,13 @@ export function Phases() {
 
   const matches = (ph: Phase) => pf === 'All' || phaseHasSubcon(ph, pf)
 
-  // group items in list order, splitting where a divider is anchored
+  // group items in list order, splitting where dividers are anchored
+  // (several dividers can share an anchor — the earlier ones become empty phases)
   const groups: Group[] = []
   let current: Group = { divider: null, items: [] }
   const seenDividers = new Set<string>()
   for (const ph of p.phases) {
-    const dv = p.dividers.find((d) => d.beforeItemId === ph.id)
-    if (dv) {
+    for (const dv of p.dividers.filter((d) => d.beforeItemId === ph.id)) {
       if (current.divider || current.items.length > 0) groups.push(current)
       current = { divider: dv, items: [] }
       seenDividers.add(dv.id)
@@ -60,6 +60,130 @@ export function Phases() {
       ui.showToast(`${ph.name} marked done 🎉`)
     }
   }
+
+  // ---- drag & drop reordering (grip handles; drop indicator; cross-phase moves) ----
+  const listRef = useRef<HTMLDivElement>(null)
+  const indicatorRef = useRef<HTMLDivElement>(null)
+
+  const commitDrop = (id: string, slot: { g: number; i: number }) => {
+    const g2 = groups.map((g) => ({ divider: g.divider, ids: g.items.map((it) => it.id) }))
+    let sg = -1
+    let si = -1
+    g2.forEach((g, gi2) => {
+      const idx = g.ids.indexOf(id)
+      if (idx >= 0) {
+        sg = gi2
+        si = idx
+      }
+    })
+    if (sg < 0 || !g2[slot.g]) return
+    g2[sg].ids.splice(si, 1)
+    let ti = slot.i
+    if (slot.g === sg && ti > si) ti -= 1
+    ti = Math.max(0, Math.min(ti, g2[slot.g].ids.length))
+    g2[slot.g].ids.splice(ti, 0, id)
+    const orderedIds = g2.flatMap((g) => g.ids)
+    // rebuild divider anchors from group membership, in display order
+    const anchors: { id: string; beforeItemId: string | null }[] = []
+    let nextFirst: string | null = null
+    for (let gi2 = g2.length - 1; gi2 >= 0; gi2--) {
+      const first: string | null = g2[gi2].ids[0] ?? nextFirst
+      if (g2[gi2].divider) anchors.push({ id: g2[gi2].divider!.id, beforeItemId: first })
+      nextFirst = first
+    }
+    anchors.reverse()
+    const unchanged =
+      orderedIds.every((oid, i2) => p.phases[i2]?.id === oid) &&
+      anchors.every((a) => p.dividers.find((d) => d.id === a.id)?.beforeItemId === a.beforeItemId)
+    if (!unchanged) {
+      actions.applyReorder(orderedIds, anchors)
+      haptic(8)
+    }
+  }
+
+  const onGripDown = (e: React.PointerEvent, id: string) => {
+    if (pf !== 'All') return
+    const gripEl = e.currentTarget as HTMLElement
+    const wrapper = gripEl.closest('[data-drag-item]') as HTMLElement | null
+    const list = listRef.current
+    const screen = list?.closest('.screen') as HTMLElement | null
+    const indicator = indicatorRef.current
+    if (!wrapper || !list || !screen || !indicator) return
+    e.preventDefault()
+    gripEl.setPointerCapture(e.pointerId)
+    const startY = e.clientY
+    const startScroll = screen.scrollTop
+    wrapper.classList.add('drag-float')
+    haptic(5)
+    let slot: { g: number; i: number } | null = null
+
+    const onMove = (ev: PointerEvent) => {
+      const dy = ev.clientY - startY + (screen.scrollTop - startScroll)
+      wrapper.style.transform = `translateY(${dy}px) scale(1.02)`
+      const sr = screen.getBoundingClientRect()
+      if (ev.clientY < sr.top + 90) screen.scrollTop -= (sr.top + 90 - ev.clientY) * 0.25
+      else if (ev.clientY > sr.bottom - 120) screen.scrollTop += (ev.clientY - (sr.bottom - 120)) * 0.25
+      // candidate slots from live geometry
+      const byGroup = new Map<number, { rects: { i: number; top: number; bottom: number }[]; emptyMid?: number }>()
+      list.querySelectorAll<HTMLElement>('[data-drag-item]:not(.drag-float), [data-empty-slot]').forEach((el) => {
+        const g = Number(el.dataset.group)
+        const r = el.getBoundingClientRect()
+        const info = byGroup.get(g) ?? { rects: [] }
+        if (el.hasAttribute('data-empty-slot')) info.emptyMid = r.top + r.height / 2
+        else info.rects.push({ i: Number(el.dataset.index), top: r.top, bottom: r.bottom })
+        byGroup.set(g, info)
+      })
+      const cands: { g: number; i: number; y: number }[] = []
+      for (const [g, info] of byGroup) {
+        if (info.emptyMid !== undefined && info.rects.length === 0) {
+          cands.push({ g, i: 0, y: info.emptyMid })
+          continue
+        }
+        info.rects.sort((a, b) => a.i - b.i)
+        for (const r of info.rects) cands.push({ g, i: r.i, y: r.top - 5 })
+        const last = info.rects[info.rects.length - 1]
+        if (last) cands.push({ g, i: last.i + 1, y: last.bottom + 5 })
+      }
+      let best: { g: number; i: number; y: number } | null = null
+      for (const c of cands) {
+        if (!best || Math.abs(ev.clientY - c.y) < Math.abs(ev.clientY - best.y)) best = c
+      }
+      if (best) {
+        slot = { g: best.g, i: best.i }
+        const listRect = list.getBoundingClientRect()
+        indicator.style.top = `${best.y - listRect.top}px`
+        indicator.style.display = 'block'
+      }
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onCancel)
+      wrapper.classList.remove('drag-float')
+      wrapper.style.transform = ''
+      indicator.style.display = 'none'
+      if (slot) commitDrop(id, slot)
+    }
+    const onCancel = () => {
+      slot = null
+      onUp()
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onCancel)
+  }
+
+  const gripFor = (ph: Phase) =>
+    pf === 'All' ? (
+      <div
+        className="drag-grip"
+        role="button"
+        aria-label={`Reorder ${ph.name}`}
+        onPointerDown={(e) => onGripDown(e, ph.id)}
+      >
+        <GripVertical size={14} />
+      </div>
+    ) : null
 
   const editBtn = (ph: Phase) => (
     <button onClick={() => setEditing(ph.id)} aria-label={`Edit ${ph.name}`} style={{ padding: 4, color: 'var(--muted)' }}>
@@ -93,11 +217,12 @@ export function Phases() {
     )
   }
 
-  const itemCard = (ph: Phase) => {
+  const itemCard = (ph: Phase, grip: React.ReactNode) => {
     const status = phaseStatus(ph)
     if (status === 'done') {
       return (
         <div key={ph.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          {grip}
           {ph.kind === 'task' && <Users size={13} color="var(--muted)" style={{ flexShrink: 0 }} />}
           <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-2)', textDecoration: 'line-through', flex: 1, minWidth: 0 }}>{ph.name}</div>
           {editBtn(ph)}
@@ -110,6 +235,7 @@ export function Phases() {
       return (
         <div key={ph.id} className="card" style={{ padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {grip}
             <Users size={14} color="var(--muted)" style={{ flexShrink: 0 }} />
             <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
             {editBtn(ph)}
@@ -142,6 +268,7 @@ export function Phases() {
       return (
         <div key={ph.id} className="card" style={{ padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {grip}
             <div style={{ fontSize: 14, fontWeight: 500, flex: 1, minWidth: 0 }}>{ph.name}</div>
             {editBtn(ph)}
             {!multi && subcons[0] && <div className="tag" style={{ flexShrink: 0 }}>{subcons[0]}</div>}
@@ -168,6 +295,7 @@ export function Phases() {
     return (
       <div key={ph.id} className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          {grip}
           <div style={{ fontSize: 15, fontWeight: 600, flex: 1, minWidth: 0 }}>{ph.name}</div>
           {editBtn(ph)}
           <div className="mono" style={{ fontSize: 13, color: 'var(--teal)' }}>{phasePct(ph)}%</div>
@@ -200,7 +328,8 @@ export function Phases() {
         </div>
       </div>
 
-      <div style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div ref={listRef} style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 8, position: 'relative' }}>
+        <div ref={indicatorRef} className="drop-indicator" />
         {groups.map((g, gi) => {
           const visible = g.items.filter(matches)
           if (g.divider && pf !== 'All' && visible.length === 0) return null
@@ -230,9 +359,13 @@ export function Phases() {
                   <div style={{ height: 1, background: 'var(--card-bd)', marginTop: 6 }} />
                 </div>
               )}
-              {visible.map(itemCard)}
+              {visible.map((ph) => (
+                <div key={ph.id} data-drag-item data-group={gi} data-index={g.items.indexOf(ph)}>
+                  {itemCard(ph, gripFor(ph))}
+                </div>
+              ))}
               {g.divider && g.items.length === 0 && (
-                <div style={{ fontSize: 12, color: 'var(--muted)', padding: '2px 2px 6px' }}>No items in this phase yet</div>
+                <div data-empty-slot data-group={gi} style={{ fontSize: 12, color: 'var(--muted)', padding: '2px 2px 6px' }}>No items in this phase yet</div>
               )}
             </div>
           )

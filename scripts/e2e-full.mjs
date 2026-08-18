@@ -168,6 +168,35 @@ await page.click('.sheet button:has-text("Tap again to confirm")')
 await page.waitForTimeout(2600)
 check('task: delete', await gone('.card:has-text("Audit Meeting")'))
 
+// ---------- Drag & drop: reorder within a phase and move across phases ----------
+async function dragGrip(cardText, targetY, steps = 16) {
+  const grip = await page.locator(`.card:has-text("${cardText}") .drag-grip`).first().boundingBox()
+  await page.mouse.move(grip.x + 5, grip.y + 5)
+  await page.mouse.down()
+  for (let i = 1; i <= steps; i++) {
+    await page.mouse.move(grip.x + 5, grip.y + 5 + (targetY - (grip.y + 5)) * (i / steps))
+    await page.waitForTimeout(14)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(500)
+}
+// cross-phase: Material Prep (Phase 1) → just below Backdrop 01 (Phase 2)
+await page.evaluate(() => { document.querySelector('.stack-base .screen').scrollTop = 0 })
+await page.waitForTimeout(300)
+const b01 = await page.locator('.card:has-text("Backdrop 01")').boundingBox()
+await dragGrip('Material Prep', b01.y + b01.height + 6)
+check('drag: move item across phases', (await page.isVisible('text=2/2')) && (await page.isVisible('text=1/9')))
+// within-phase: Backdrop 04 above Backdrop 02
+await page.locator('.card:has-text("Backdrop 03")').scrollIntoViewIfNeeded()
+await page.waitForTimeout(300)
+const b02 = await page.locator('.card:has-text("Backdrop 02")').boundingBox()
+await dragGrip('Backdrop 04', b02.y - 8)
+const ord = await page.evaluate(() => {
+  const t = [...document.querySelectorAll('[data-drag-item]')].map((el) => el.textContent)
+  return t.findIndex((x) => x.includes('Backdrop 04')) < t.findIndex((x) => x.includes('Backdrop 02'))
+})
+check('drag: reorder within a phase', ord)
+
 // ---------- Supplies: add / search / edit stock / delete ----------
 await page.click('nav >> text=Supplies')
 await page.click('text=+ Add supply')

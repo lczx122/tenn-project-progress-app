@@ -414,6 +414,26 @@ export const actions = {
     })
   },
 
+  /** Commit a drag-reorder: new item order plus recomputed divider anchors. */
+  applyReorder(orderedIds: string[], anchors: { id: string; beforeItemId: string | null }[]) {
+    setProject((p) => {
+      const byId = new Map(p.phases.map((ph) => [ph.id, ph]))
+      const phases = orderedIds.map((id) => byId.get(id)).filter((ph): ph is Phase => !!ph)
+      if (phases.length !== p.phases.length) return p // ids out of sync — refuse
+      // rebuild dividers in display order with their new anchors
+      const dividers = anchors
+        .map((a) => {
+          const d = p.dividers.find((x) => x.id === a.id)
+          return d ? { ...d, beforeItemId: a.beforeItemId } : null
+        })
+        .filter((d): d is NonNullable<typeof d> => !!d)
+      for (const d of p.dividers) {
+        if (!dividers.some((x) => x.id === d.id)) dividers.push(d)
+      }
+      return { ...p, phases, dividers }
+    })
+  },
+
   // ---- phase dividers ----
   addDivider(name: string, beforeItemId: string | null) {
     setProject((p) => ({
