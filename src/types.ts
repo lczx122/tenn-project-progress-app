@@ -1,16 +1,21 @@
 export type PhaseStatus = 'todo' | 'prog' | 'done'
 
-/** One subcontractor's individually-tracked progress within a phase. */
-export interface PhaseWork {
+/** Section lifecycle; drives the phase percentage (0 → ⅓ → ⅔ → 1). */
+export type SectionStatus = 'todo' | 'started' | 'ongoing' | 'done'
+
+/** A piece of work within a phase, handled by exactly one subcontractor. */
+export interface PhaseSection {
+  id: string
+  name: string
   subcon: string
-  pct: number
+  status: SectionStatus
 }
 
 export interface Phase {
   id: string
   name: string
-  /** One entry per assigned subcontractor; phase progress is their average. */
-  work: PhaseWork[]
+  /** Progress is the average of section statuses; done when every section is finished. */
+  sections: PhaseSection[]
   note?: string
   blocked?: boolean
 }

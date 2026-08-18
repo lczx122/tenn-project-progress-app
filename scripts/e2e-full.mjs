@@ -33,50 +33,62 @@ async function drag(x1, y1, x2, y2, steps = 12, delayMs = 10) {
 await page.goto('http://localhost:4173/')
 await page.waitForSelector('text=Overall progress')
 
-// ---------- Phases: add / edit / complete / delete / filter / start ----------
+// ---------- Phases: sections — add / edit / advance / delete / filter / start ----------
 await page.click('nav >> text=Phases')
 await page.click('text=+ Add phase')
 await page.fill('input[placeholder="e.g. Backdrop 05"]', 'Audit Phase')
+await page.fill('input[aria-label="Section 1 name"]', 'Sec A')
 await page.click('.sheet .chip:has-text("Ah Kang")')
 await page.click('.sheet .primary-btn')
 await page.waitForTimeout(600)
-check('phase: add', await page.isVisible('.card:has-text("Audit Phase")'))
+check('phase: add with section', await page.isVisible('.card:has-text("Audit Phase")'))
 
+// set section to Started via edit sheet → phase enters IN PROGRESS at 33%
 await page.locator('button[aria-label="Edit Audit Phase"]').click()
 await page.waitForTimeout(500)
-await page.click('.sheet button[aria-label="Increase Ah Kang"]')
+await page.click('button[aria-label="Started for section 1"]')
 await page.click('.sheet button:has-text("Save changes")')
 await page.waitForTimeout(600)
-check('phase: edit → in progress at 5%', await page.isVisible('.card:has-text("Audit Phase") >> text=5%'))
+check('phase: section Started → 33%', await page.isVisible('.card:has-text("Audit Phase") >> text=33%'))
 
-await page.click('.card:has-text("Audit Phase") button:has-text("+5%")')
-await page.waitForTimeout(200)
-check('phase: +5% bump', await page.isVisible('.card:has-text("Audit Phase") >> text=10%'))
+// advance on the card: Started → Ongoing → 67%
+await page.click('button[aria-label="Advance Sec A"]')
+await page.waitForTimeout(300)
+check('phase: advance section → 67%', await page.isVisible('.card:has-text("Audit Phase") >> text=67%'))
 
-// exact % via number box and slider (steppers still work — used above)
+// add a second section in the edit sheet
 await page.locator('button[aria-label="Edit Audit Phase"]').click()
 await page.waitForTimeout(500)
-await page.fill('input[aria-label="Ah Kang percent"]', '47')
-check('phase: slider present', await page.isVisible('input[aria-label="Ah Kang progress slider"]'))
+await page.click('.sheet button:has-text("Add section")')
+await page.fill('input[aria-label="Section 2 name"]', 'Sec B')
 await page.click('.sheet button:has-text("Save changes")')
 await page.waitForTimeout(600)
-check('phase: exact % via number box', await page.isVisible('.card:has-text("Audit Phase") >> text=47%'))
+check('phase: add section', await page.isVisible('.card:has-text("Audit Phase") >> text=Sec B'))
 
-// multi-subcon phase: Pantry has Ah Kang 30% + Classic Home 15%, tracked separately
+// remove the second section again
+await page.locator('button[aria-label="Edit Audit Phase"]').click()
+await page.waitForTimeout(500)
+await page.click('button[aria-label="Remove section 2"]')
+await page.click('.sheet button:has-text("Save changes")')
+await page.waitForTimeout(600)
+check('phase: remove section', await gone('.card:has-text("Audit Phase") >> text=Sec B'))
+
+// multi-trade phase: Pantry — Wiring (Ah Kang, Ongoing) + Cabinets (Classic Home, Started)
 const pantry = page.locator('.card:has-text("Pantry")')
 check(
-  'phase: multi-subcon rows tracked individually',
+  'phase: sections per subcon',
   (await pantry.locator('.tag:has-text("Ah Kang")').count()) === 1 &&
     (await pantry.locator('.tag:has-text("Classic Home")').count()) === 1 &&
-    (await pantry.locator('text=30%').count()) === 1 &&
-    (await pantry.locator('text=15%').count()) === 1,
+    (await pantry.locator('button[aria-label="Advance Wiring first fix"]').count()) === 1,
 )
-// bumping one subcon moves only that subcon (30 → 35, the other stays 15)
-await pantry.locator('button[aria-label="+5% Ah Kang"]').click()
-await page.waitForTimeout(200)
+// advancing one section leaves the other untouched (Ongoing→Finished; 50% → 67%)
+await pantry.locator('button[aria-label="Advance Wiring first fix"]').click()
+await page.waitForTimeout(300)
 check(
-  'phase: bump affects only its subcon',
-  (await pantry.locator('text=35%').count()) === 1 && (await pantry.locator('text=15%').count()) === 1,
+  'phase: advance affects only its section',
+  (await pantry.locator('text=Finished ✓').count()) === 1 &&
+    (await pantry.locator('button[aria-label="Advance Pantry cabinets"]').count()) === 1 &&
+    (await pantry.locator('text=67%').count()) === 1,
 )
 
 await page.locator('button[aria-label="Edit Audit Phase"]').click()
@@ -92,7 +104,7 @@ check('phase: subcon filter', await gone('text=Backdrop 01') && (await page.isVi
 await page.click('.chip:has-text("All")')
 await page.click('.card:has-text("Backdrop 02") button:has-text("Start")')
 await page.waitForTimeout(300)
-check('phase: start → in progress', await page.isVisible('.card:has-text("Backdrop 02") >> text=5%'))
+check('phase: start → sections Started at 33%', await page.isVisible('.card:has-text("Backdrop 02") >> text=33%'))
 
 // ---------- Supplies: add / search / edit stock / delete ----------
 await page.click('nav >> text=Supplies')

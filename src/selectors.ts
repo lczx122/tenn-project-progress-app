@@ -1,20 +1,32 @@
 // Derived values shared across screens (mirrors the prototype's renderVals()).
-import type { Draft, Phase, PhaseStatus, Project, Supply } from './types'
+import type { Draft, Phase, PhaseStatus, Project, SectionStatus, Supply } from './types'
 
-export function phasePct(p: Phase): number {
-  if (p.work.length === 0) return 0
-  return Math.round(p.work.reduce((a, w) => a + w.pct, 0) / p.work.length)
+/** How much a section contributes to its phase: 0 → ⅓ → ⅔ → 1. */
+export function sectionWeight(status: SectionStatus): number {
+  return status === 'done' ? 1 : status === 'ongoing' ? 2 / 3 : status === 'started' ? 1 / 3 : 0
 }
 
-/** Done only when every assigned subcon is at 100%; in progress once any has started. */
+export const SECTION_ORDER: SectionStatus[] = ['todo', 'started', 'ongoing', 'done']
+
+export function nextSectionStatus(status: SectionStatus): SectionStatus {
+  const i = SECTION_ORDER.indexOf(status)
+  return SECTION_ORDER[Math.min(i + 1, SECTION_ORDER.length - 1)]
+}
+
+export function phasePct(p: Phase): number {
+  if (p.sections.length === 0) return 0
+  return Math.round((p.sections.reduce((a, s) => a + sectionWeight(s.status), 0) / p.sections.length) * 100)
+}
+
+/** Done only when every section is finished; in progress once any section has started. */
 export function phaseStatus(p: Phase): PhaseStatus {
-  if (p.work.length > 0 && p.work.every((w) => w.pct >= 100)) return 'done'
-  if (p.work.some((w) => w.pct > 0)) return 'prog'
+  if (p.sections.length > 0 && p.sections.every((s) => s.status === 'done')) return 'done'
+  if (p.sections.some((s) => s.status !== 'todo')) return 'prog'
   return 'todo'
 }
 
 export function phaseHasSubcon(p: Phase, name: string): boolean {
-  return p.work.some((w) => w.subcon === name)
+  return p.sections.some((s) => s.subcon === name)
 }
 
 export function overallPct(project: Project): number {
@@ -22,11 +34,11 @@ export function overallPct(project: Project): number {
   return Math.round(project.phases.reduce((a, p) => a + phasePct(p), 0) / project.phases.length)
 }
 
-/** Average over the subcon's individual assignments across all phases. */
+/** Average over the subcon's sections across all phases. */
 export function subconPct(project: Project, name: string): number {
-  const works = project.phases.flatMap((p) => p.work.filter((w) => w.subcon === name))
-  if (works.length === 0) return 0
-  return Math.round(works.reduce((a, w) => a + w.pct, 0) / works.length)
+  const secs = project.phases.flatMap((p) => p.sections.filter((s) => s.subcon === name))
+  if (secs.length === 0) return 0
+  return Math.round((secs.reduce((a, s) => a + sectionWeight(s.status), 0) / secs.length) * 100)
 }
 
 export function isLow(s: Supply): boolean {

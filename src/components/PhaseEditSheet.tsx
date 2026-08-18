@@ -1,11 +1,27 @@
 import { useState } from 'react'
+import { Plus, X } from 'lucide-react'
 import { activeProject, actions, useAppState } from '../store'
 import { useUi } from '../ui'
 import { ConfirmButton, Field, TextField } from './form'
 import { Sheet } from './Sheet'
 import { phaseStatus } from '../selectors'
+import type { SectionStatus } from '../types'
 
-/** Add (no phaseId) or edit (phaseId) a phase. Multiple subcons, tracked individually. */
+const STATUS_LABELS: { key: SectionStatus; label: string }[] = [
+  { key: 'todo', label: 'Not started' },
+  { key: 'started', label: 'Started' },
+  { key: 'ongoing', label: 'Ongoing' },
+  { key: 'done', label: 'Finished' },
+]
+
+interface DraftSection {
+  id: string
+  name: string
+  subcon: string
+  status: SectionStatus
+}
+
+/** Add (no phaseId) or edit (phaseId) a phase and its sections. */
 export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose: () => void }) {
   const s = useAppState()
   const ui = useUi()
@@ -15,27 +31,41 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
   const [name, setName] = useState(existing?.name ?? '')
   const [note, setNote] = useState(existing?.note ?? '')
   const [blocked, setBlocked] = useState(existing?.blocked ?? false)
-  // selection order + remembered pct per subcon (kept when toggled off and back on)
-  const [selected, setSelected] = useState<string[]>(existing?.work.map((w) => w.subcon) ?? [])
-  const [pcts, setPcts] = useState<Record<string, number>>(
-    Object.fromEntries((existing?.work ?? []).map((w) => [w.subcon, w.pct])),
+  const [sections, setSections] = useState<DraftSection[]>(
+    existing?.sections.map((sec) => ({ ...sec })) ?? [
+      { id: `new-1`, name: '', subcon: p.subcons[0]?.name ?? '', status: 'todo' },
+    ],
   )
 
-  const toggle = (sub: string) => {
-    setSelected((sel) => (sel.includes(sub) ? sel.filter((x) => x !== sub) : [...sel, sub]))
+  const patch = (id: string, part: Partial<DraftSection>) => {
+    setSections((list) => list.map((sec) => (sec.id === id ? { ...sec, ...part } : sec)))
   }
 
-  const setPct = (sub: string, pct: number) => {
-    setPcts((m) => ({ ...m, [sub]: Math.max(0, Math.min(100, pct)) }))
+  const addSection = () => {
+    setSections((list) => [
+      ...list,
+      { id: `new-${Date.now()}`, name: '', subcon: p.subcons[0]?.name ?? '', status: 'todo' },
+    ])
   }
+
+  const removeSection = (id: string) => {
+    setSections((list) => list.filter((sec) => sec.id !== id))
+  }
+
+  const valid = name.trim().length > 0 && sections.length > 0 && sections.every((sec) => sec.name.trim() && sec.subcon)
 
   const save = (close: () => void) => {
-    const work = selected.map((sub) => ({ subcon: sub, pct: pcts[sub] ?? 0 }))
+    const cleaned = sections.map((sec) => ({ ...sec, name: sec.name.trim() }))
     if (existing) {
-      actions.updatePhase(existing.id, { name: name.trim(), work, note: note.trim() || undefined, blocked })
+      actions.updatePhase(existing.id, {
+        name: name.trim(),
+        sections: cleaned,
+        note: note.trim() || undefined,
+        blocked,
+      })
       ui.showToast('Phase updated')
     } else {
-      actions.addPhase(name.trim(), selected)
+      actions.addPhase(name.trim(), cleaned.map(({ name: n, subcon, status }) => ({ name: n, subcon, status })))
       ui.showToast(`${name.trim()} added`)
     }
     close()
@@ -51,68 +81,73 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
 
           <TextField label="Phase name" value={name} onChange={setName} placeholder="e.g. Backdrop 05" />
 
-          {p.subcons.length > 0 ? (
-            <Field label="Subcontractors (tap to assign — each is tracked individually)">
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {p.subcons.map((g) => (
-                  <button
-                    key={g.name}
-                    type="button"
-                    className={`chip ${selected.includes(g.name) ? 'active' : ''}`}
-                    style={{ padding: '5px 12px' }}
-                    onClick={() => toggle(g.name)}
-                  >
-                    {g.name}
-                  </button>
-                ))}
-              </div>
-            </Field>
-          ) : (
+          {p.subcons.length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--warn)', marginTop: 10 }}>
               No subcontractors yet — add them in project settings first.
             </div>
-          )}
-
-          {existing && selected.length > 0 && (
-            <Field label="Progress per subcontractor">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {selected.map((sub) => {
-                  const pct = pcts[sub] ?? 0
-                  return (
-                    <div key={sub} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ fontSize: 12, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
-                        <button className="stepper-btn" aria-label={`Decrease ${sub}`} onClick={() => setPct(sub, pct - 5)}>−</button>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <input
-                            className="pct-input mono"
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            max={100}
-                            value={pct}
-                            aria-label={`${sub} percent`}
-                            onFocus={(e) => e.target.select()}
-                            onChange={(e) => setPct(sub, e.target.value === '' ? 0 : Math.round(Number(e.target.value)))}
-                          />
-                          <span style={{ fontSize: 12, color: 'var(--text-2)' }}>%</span>
-                        </div>
-                        <button className="stepper-btn" aria-label={`Increase ${sub}`} style={{ color: 'var(--teal)' }} onClick={() => setPct(sub, pct + 5)}>+</button>
-                      </div>
+          ) : (
+            <Field label="Sections (each handled by one subcontractor)">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {sections.map((sec, i) => (
+                  <div key={sec.id} style={{ background: 'var(--bg)', borderRadius: 10, padding: 10 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <input
-                        className="pct-slider"
-                        type="range"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={pct}
-                        aria-label={`${sub} progress slider`}
-                        style={{ background: `linear-gradient(to right, var(--teal) ${pct}%, var(--fill) ${pct}%)` }}
-                        onChange={(e) => setPct(sub, Number(e.target.value))}
+                        className="text-input"
+                        style={{ background: '#fff' }}
+                        placeholder={`Section ${i + 1} — e.g. Framing`}
+                        value={sec.name}
+                        aria-label={`Section ${i + 1} name`}
+                        onChange={(e) => patch(sec.id, { name: e.target.value })}
                       />
+                      {sections.length > 1 && (
+                        <button
+                          aria-label={`Remove section ${i + 1}`}
+                          style={{ color: 'var(--danger)', padding: 4, flexShrink: 0 }}
+                          onClick={() => removeSection(sec.id)}
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
                     </div>
-                  )
-                })}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                      {p.subcons.map((g) => (
+                        <button
+                          key={g.name}
+                          type="button"
+                          className={`chip ${sec.subcon === g.name ? 'active' : ''}`}
+                          style={{ padding: '4px 10px', fontSize: 12 }}
+                          onClick={() => patch(sec.id, { subcon: g.name })}
+                        >
+                          {g.name}
+                        </button>
+                      ))}
+                    </div>
+                    {existing && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                        {STATUS_LABELS.map(({ key, label }) => (
+                          <button
+                            key={key}
+                            type="button"
+                            className={`chip ${sec.status === key ? 'active' : ''}`}
+                            style={{ padding: '4px 10px', fontSize: 12 }}
+                            aria-label={`${label} for section ${i + 1}`}
+                            onClick={() => patch(sec.id, { status: key })}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <button
+                  className="sheet-row"
+                  style={{ marginTop: 0 }}
+                  onClick={addSection}
+                >
+                  <Plus size={16} color="var(--teal)" />
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--teal)' }}>Add section</div>
+                </button>
               </div>
             </Field>
           )}
@@ -136,7 +171,7 @@ export function PhaseEditSheet({ phaseId, onClose }: { phaseId?: string; onClose
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-            <button className="primary-btn" disabled={!name.trim() || selected.length === 0} onClick={() => save(close)}>
+            <button className="primary-btn" disabled={!valid} onClick={() => save(close)}>
               {existing ? 'Save changes' : 'Add phase'}
             </button>
             {existing && (

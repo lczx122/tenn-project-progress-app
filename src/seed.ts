@@ -53,23 +53,43 @@ export function seedState(): AppState {
     subcons: SUBCONS,
     nextPo: 1052,
     phases: [
-      { id: 'ph1', name: 'Faithview Meeting — Pre-condition check', work: [{ subcon: 'Classic Home', pct: 100 }] },
-      { id: 'ph2', name: 'Material Prep', work: [{ subcon: 'Classic Home', pct: 100 }] },
-      { id: 'ph3', name: 'Site Meeting with Sub-con', work: [{ subcon: 'Classic Home', pct: 100 }] },
-      { id: 'ph4', name: 'Backdrop 01', work: [{ subcon: 'Classic Home', pct: 75 }], note: 'Due 18 Aug · photo logged today' },
-      { id: 'ph5', name: 'Reception Counter 01', work: [{ subcon: 'Fanmuli 定制', pct: 50 }], note: 'Blocked · waiting laminate', blocked: true },
-      // multi-subcon phase: each trade tracked individually
-      { id: 'ph6', name: 'Pantry', work: [{ subcon: 'Ah Kang', pct: 30 }, { subcon: 'Classic Home', pct: 15 }], note: 'Wiring first fix · due 22 Aug' },
-      { id: 'ph7', name: 'Toilet Glass (M & F)', work: [{ subcon: 'Hock Heng', pct: 20 }], note: 'Measurement done · fabricating' },
-      { id: 'ph8', name: 'Backdrop 02', work: [{ subcon: 'Classic Home', pct: 0 }] },
-      { id: 'ph9', name: 'Backdrop 03', work: [{ subcon: 'Classic Home', pct: 0 }] },
-      { id: 'ph10', name: 'Backdrop 04', work: [{ subcon: 'Classic Home', pct: 0 }] },
-      { id: 'ph11', name: 'Reception Counter 02', work: [{ subcon: 'Fanmuli 定制', pct: 0 }] },
-      { id: 'ph12', name: 'Model House', work: [{ subcon: 'Fanmuli 定制', pct: 0 }] },
-      { id: 'ph13', name: 'Sitting Area 01', work: [{ subcon: 'Fanmuli 定制', pct: 0 }] },
-      { id: 'ph14', name: 'Sitting Area 02', work: [{ subcon: 'Ah Kang', pct: 0 }] },
-      { id: 'ph15', name: 'Type Unit Signage A/B', work: [{ subcon: 'Hock Heng', pct: 0 }] },
-      { id: 'ph16', name: 'Advertising Board', work: [{ subcon: 'Hock Heng', pct: 0 }] },
+      { id: 'ph1', name: 'Faithview Meeting — Pre-condition check', sections: [
+        { id: 'ph1-s1', name: 'Meeting & checklist', subcon: 'Classic Home', status: 'done' },
+      ] },
+      { id: 'ph2', name: 'Material Prep', sections: [
+        { id: 'ph2-s1', name: 'Materials ordered & received', subcon: 'Classic Home', status: 'done' },
+      ] },
+      { id: 'ph3', name: 'Site Meeting with Sub-con', sections: [
+        { id: 'ph3-s1', name: 'Kickoff meeting', subcon: 'Classic Home', status: 'done' },
+      ] },
+      { id: 'ph4', name: 'Backdrop 01', note: 'Due 18 Aug · photo logged today', sections: [
+        { id: 'ph4-s1', name: 'Framing', subcon: 'Classic Home', status: 'done' },
+        { id: 'ph4-s2', name: 'Cladding', subcon: 'Classic Home', status: 'ongoing' },
+        { id: 'ph4-s3', name: 'Paint & finish', subcon: 'Classic Home', status: 'todo' },
+      ] },
+      { id: 'ph5', name: 'Reception Counter 01', note: 'Blocked · waiting laminate', blocked: true, sections: [
+        { id: 'ph5-s1', name: 'Carcass', subcon: 'Fanmuli 定制', status: 'done' },
+        { id: 'ph5-s2', name: 'Laminate finish', subcon: 'Fanmuli 定制', status: 'todo' },
+      ] },
+      // multi-trade phase: each section handled by one subcon
+      { id: 'ph6', name: 'Pantry', note: 'Wiring first fix · due 22 Aug', sections: [
+        { id: 'ph6-s1', name: 'Wiring first fix', subcon: 'Ah Kang', status: 'ongoing' },
+        { id: 'ph6-s2', name: 'Pantry cabinets', subcon: 'Classic Home', status: 'started' },
+      ] },
+      { id: 'ph7', name: 'Toilet Glass (M & F)', note: 'Measurement done · fabricating', sections: [
+        { id: 'ph7-s1', name: 'Measurement', subcon: 'Hock Heng', status: 'done' },
+        { id: 'ph7-s2', name: 'Fabrication', subcon: 'Hock Heng', status: 'started' },
+        { id: 'ph7-s3', name: 'Installation', subcon: 'Hock Heng', status: 'todo' },
+      ] },
+      { id: 'ph8', name: 'Backdrop 02', sections: [{ id: 'ph8-s1', name: 'Main works', subcon: 'Classic Home', status: 'todo' }] },
+      { id: 'ph9', name: 'Backdrop 03', sections: [{ id: 'ph9-s1', name: 'Main works', subcon: 'Classic Home', status: 'todo' }] },
+      { id: 'ph10', name: 'Backdrop 04', sections: [{ id: 'ph10-s1', name: 'Main works', subcon: 'Classic Home', status: 'todo' }] },
+      { id: 'ph11', name: 'Reception Counter 02', sections: [{ id: 'ph11-s1', name: 'Main works', subcon: 'Fanmuli 定制', status: 'todo' }] },
+      { id: 'ph12', name: 'Model House', sections: [{ id: 'ph12-s1', name: 'Main works', subcon: 'Fanmuli 定制', status: 'todo' }] },
+      { id: 'ph13', name: 'Sitting Area 01', sections: [{ id: 'ph13-s1', name: 'Main works', subcon: 'Fanmuli 定制', status: 'todo' }] },
+      { id: 'ph14', name: 'Sitting Area 02', sections: [{ id: 'ph14-s1', name: 'Main works', subcon: 'Ah Kang', status: 'todo' }] },
+      { id: 'ph15', name: 'Type Unit Signage A/B', sections: [{ id: 'ph15-s1', name: 'Main works', subcon: 'Hock Heng', status: 'todo' }] },
+      { id: 'ph16', name: 'Advertising Board', sections: [{ id: 'ph16-s1', name: 'Main works', subcon: 'Hock Heng', status: 'todo' }] },
     ],
     supplies: [
       {
@@ -166,5 +186,5 @@ export function seedState(): AppState {
     draft: emptyDraft(SUBCONS),
   }
 
-  return { version: 3, projects: [project], activeProjectId: 'p1' }
+  return { version: 4, projects: [project], activeProjectId: 'p1' }
 }

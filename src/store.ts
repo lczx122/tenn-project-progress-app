@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react'
 import type { AppState, DrawingSet, Phase, Project, Report, Supply } from './types'
 import { deleteDatabase, kvGet, kvSet, photoDelete, photoPut } from './db'
 import { DEFAULT_WHATSAPP_URL, emptyDraft, newProject, seedState } from './seed'
+import { nextSectionStatus } from './selectors'
 import { addDays, todayISO } from './utils/dates'
 
 const STATE_KEY = 'app-state'
@@ -110,11 +111,12 @@ function migrateState(s: AppState): AppState {
       version: 2,
       projects: out.projects.map((p) => ({
         ...p,
+        // intermediate v2 shape (work[]); converted to sections by the v4 step below
         phases: (p.phases as unknown as LegacyPhase[]).map((ph) => {
-          if (ph.work) return ph as Phase
+          if (ph.work) return ph
           const pct = ph.status === 'done' ? 100 : ph.status === 'prog' ? Math.max(ph.pct ?? 5, 1) : 0
           return { id: ph.id, name: ph.name, note: ph.note, blocked: ph.blocked, work: [{ subcon: ph.subcon ?? '', pct }] }
-        }),
+        }) as unknown as Phase[],
       })),
     }
   }
@@ -124,6 +126,35 @@ function migrateState(s: AppState): AppState {
       ...out,
       version: 3,
       projects: out.projects.map((p) => ({ ...p, whatsappUrl: p.whatsappUrl ?? DEFAULT_WHATSAPP_URL })),
+    }
+  }
+  // v3 → v4: per-subcon work[] percentages become named sections with statuses
+  if (out.version < 4) {
+    interface LegacyWorkPhase {
+      id: string; name: string; note?: string; blocked?: boolean
+      work?: { subcon: string; pct: number }[]
+      sections?: Phase['sections']
+    }
+    const toStatus = (pct: number): Phase['sections'][number]['status'] =>
+      pct >= 100 ? 'done' : pct >= 50 ? 'ongoing' : pct > 0 ? 'started' : 'todo'
+    out = {
+      ...out,
+      version: 4,
+      projects: out.projects.map((p) => ({
+        ...p,
+        phases: (p.phases as unknown as LegacyWorkPhase[]).map((ph) => {
+          if (ph.sections) return ph as Phase
+          return {
+            id: ph.id, name: ph.name, note: ph.note, blocked: ph.blocked,
+            sections: (ph.work ?? []).map((w, i) => ({
+              id: `${ph.id}-s${i + 1}`,
+              name: 'Main works',
+              subcon: w.subcon,
+              status: toStatus(w.pct),
+            })),
+          }
+        }),
+      })),
     }
   }
   return out
@@ -190,30 +221,35 @@ export const actions = {
     return id
   },
 
-  /** Start every assigned subcon at 5% (individual bumps diverge from there). */
+  /** Mark every not-started section as Started. */
   startPhase(phaseId: string) {
     setProject((p) => ({
       ...p,
       phases: p.phases.map((ph) =>
         ph.id === phaseId
-          ? { ...ph, work: ph.work.map((w) => ({ ...w, pct: Math.max(w.pct, 5) })), note: 'Started today', blocked: false }
+          ? {
+              ...ph,
+              sections: ph.sections.map((s) => (s.status === 'todo' ? { ...s, status: 'started' } : s)),
+              note: 'Started today',
+              blocked: false,
+            }
           : ph,
       ),
     }))
   },
 
-  /** +5% for one subcon's work; ≥95% snaps to 100. Returns true when the whole phase completed. */
-  bumpPhaseWork(phaseId: string, subcon: string): boolean {
+  /** Advance one section to the next status. Returns true when the whole phase completed. */
+  advanceSection(phaseId: string, sectionId: string): boolean {
     let completed = false
     setProject((p) => ({
       ...p,
       phases: p.phases.map((ph) => {
         if (ph.id !== phaseId) return ph
-        const work = ph.work.map((w) =>
-          w.subcon === subcon ? { ...w, pct: w.pct >= 95 ? 100 : w.pct + 5 } : w,
+        const sections = ph.sections.map((s) =>
+          s.id === sectionId ? { ...s, status: nextSectionStatus(s.status) } : s,
         )
-        completed = work.length > 0 && work.every((w) => w.pct >= 100)
-        return { ...ph, work }
+        completed = sections.length > 0 && sections.every((s) => s.status === 'done')
+        return { ...ph, sections }
       }),
     }))
     return completed
@@ -310,10 +346,14 @@ export const actions = {
   },
 
   // ---- master-data editing ----
-  addPhase(name: string, subcons: string[]) {
+  addPhase(name: string, sections: { name: string; subcon: string; status: Phase['sections'][number]['status'] }[]) {
+    const base = Date.now()
     setProject((p) => ({
       ...p,
-      phases: [...p.phases, { id: `ph${Date.now()}`, name, work: subcons.map((s) => ({ subcon: s, pct: 0 })) }],
+      phases: [
+        ...p.phases,
+        { id: `ph${base}`, name, sections: sections.map((s, i) => ({ id: `ph${base}-s${i + 1}`, ...s })) },
+      ],
     }))
   },
 
@@ -398,7 +438,7 @@ export const actions = {
         subcons: p.subcons.map((s) => (s.name === oldName ? { name, trade } : s)),
         phases: p.phases.map((ph) => ({
           ...ph,
-          work: ph.work.map((w) => (w.subcon === oldName ? { ...w, subcon: name } : w)),
+          sections: ph.sections.map((s) => (s.subcon === oldName ? { ...s, subcon: name } : s)),
         })),
         supplies: p.supplies.map((su) => (su.usedBy === oldName ? { ...su, usedBy: name } : su)),
         draft: { ...p.draft, man },
@@ -409,7 +449,7 @@ export const actions = {
   /** Returns false when the subcontractor is still referenced by phases or supplies. */
   deleteSubcon(name: string): boolean {
     const p = activeProject(getState())
-    if (p.phases.some((ph) => ph.work.some((w) => w.subcon === name)) || p.supplies.some((su) => su.usedBy === name)) {
+    if (p.phases.some((ph) => ph.sections.some((s) => s.subcon === name)) || p.supplies.some((su) => su.usedBy === name)) {
       return false
     }
     setProject((pr) => {
