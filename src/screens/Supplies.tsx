@@ -51,7 +51,7 @@ export function Supplies() {
         </div>
       </div>
 
-      <div style={{ padding: '6px 20px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="supply-list" style={{ padding: '6px 20px 16px' }}>
         {rows.map((su) => {
           const low = isLow(su)
           const pct = su.max > 0 ? Math.round((su.stock / su.max) * 100) : 0

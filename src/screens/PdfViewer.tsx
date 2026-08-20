@@ -95,7 +95,7 @@ export function PdfViewer({ drawingId }: { drawingId: string }) {
   useLayoutEffect(() => {
     const el = rootRef.current
     if (!el) return
-    setPageWidth(el.clientWidth)
+    setPageWidth(Math.min(el.clientWidth, 900))
     if (prefersReducedMotion()) return
     const h = el.offsetHeight || 800
     const spring = createSpring(h, (y) => {

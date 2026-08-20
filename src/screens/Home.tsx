@@ -94,10 +94,10 @@ export function Home() {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="home-grid" style={{ padding: '0 20px 16px' }}>
         {/* SOP card */}
         <button
-          className="pressable"
+          className="pressable home-sop"
           style={{ background: 'var(--teal)', borderRadius: 16, padding: 16, color: '#fff', width: '100%' }}
           onClick={() => {
             if (showPreview) ui.push({ type: 'reportView', reportId: todayReport!.id })
@@ -158,7 +158,7 @@ export function Home() {
         </button>
 
         {/* Overall progress */}
-        <div className="card-hero">
+        <div className="card-hero home-progress">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Overall progress</div>
             <div className="mono" style={{ fontSize: 14, color: 'var(--teal)' }}>{overallPct(p)}%</div>
@@ -196,7 +196,7 @@ export function Home() {
         {/* Low stock alert */}
         {low.length > 0 && (
           <button
-            className="pressable"
+            className="pressable home-row"
             style={{
               background: 'var(--warn-bg)', border: '1px solid var(--warn-bd)', borderRadius: 12, padding: '12px 14px',
               display: 'flex', gap: 10, alignItems: 'center', width: '100%',
@@ -214,7 +214,7 @@ export function Home() {
         {/* Delivery alert */}
         {nextDelivery && (
           <button
-            className="card"
+            className="card home-row"
             style={{ padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'center', width: '100%' }}
             onClick={() => ui.goSupplies('transit')}
           >
@@ -229,7 +229,7 @@ export function Home() {
 
         {/* Drawings row */}
         <button
-          className="card"
+          className="card home-row"
           style={{ padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'center', width: '100%' }}
           onClick={() => ui.push({ type: 'drawings' })}
         >

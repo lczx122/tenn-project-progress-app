@@ -65,7 +65,7 @@ export function History() {
       <div style={{ padding: '18px 20px 10px' }}>
         <div className="screen-title">History</div>
       </div>
-      <div style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="history-cols" style={{ padding: '4px 20px 16px' }}>
         {/* Calendar */}
         <div className="card-hero">
           <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{fmtMonthYear(T)}</div>
